@@ -1,5 +1,6 @@
 
-  # Groceries list creaiton
+  # ShopBuddy
+  # CMPT 863- Group 10
 
   This is a code bundle for Groceries list creaiton. The original project is available at https://www.figma.com/design/B8AdvMAk7SgPZKwf4DTws7/Groceries-list-creaiton.
 
