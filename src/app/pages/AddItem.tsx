@@ -80,25 +80,8 @@ export default function AddItemPage({ onAddItem }: AddItemPageProps) {
   };
 
   return (
-    <div className="bg-white min-h-screen pb-[150px] max-w-[608px] mx-auto">
-      {/* Status Bar with Time & Battery */}
-      <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
-        <span>9:41</span>
-        <div className="flex items-center gap-2">
-          {/* Cellular signal */}
-          <div className="flex gap-1">
-            <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm"></div>
-            <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm"></div>
-            <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm opacity-40"></div>
-            <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm opacity-40"></div>
-          </div>
-          {/* Battery */}
-          <div className="w-6 h-3 border-2 border-[#1A1A1A] rounded-sm relative">
-            <div className="absolute inset-0.5 bg-[#34C759] rounded-[1px]"></div>
-            <div className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-1 bg-[#1A1A1A] rounded-r-sm opacity-40"></div>
-          </div>
-        </div>
-      </div>
+    <div className="bg-white min-h-screen pb-[150px] max-w-[3000px] mx-auto">
+
       {/* Header */}
       <div className="px-6 py-4 flex items-center gap-3 border-b border-[#F5F5F5]">
         <button

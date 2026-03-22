@@ -3,7 +3,7 @@ import BottomNav from "../components/BottomNav";
 
 export default function Receipt() {
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
+    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
       {/* Status Bar */}
       <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
         <span>9:41</span>
