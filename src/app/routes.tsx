@@ -4,6 +4,7 @@ import ListDetail from "./pages/ListDetail";
 import Settings from "./pages/Settings";
 import Receipt from "./pages/Receipt";
 import NotFound from "./pages/NotFound";
+import AddItem from "./pages/AddItem";
 
 export const router = createBrowserRouter([
   {
@@ -26,4 +27,8 @@ export const router = createBrowserRouter([
     path: "*",
     Component: NotFound,
   },
+  {
+    path: "/add-item",
+    Component: AddItem,
+  }
 ]);

@@ -10,7 +10,7 @@ import {
 } from "../store/listsStore";
 import BottomNav from "../components/BottomNav";
 
-interface GroceryItem extends ListItem {
+export interface GroceryItem extends ListItem {
   category: string;
   quantity: number;
   unit: string;
@@ -100,16 +100,6 @@ export default function ListDetail() {
     },
   ]);
 
-  const [suggestedItem] = useState<GroceryItem>({
-    id: "suggested-1",
-    text: "Guacamole Tub",
-    completed: false,
-    category: "Produce",
-    quantity: 1,
-    unit: "250g",
-    suggested: true,
-  });
-
   useEffect(() => {
     if (!list) {
       navigate("/");
@@ -146,12 +136,6 @@ export default function ListDetail() {
     );
   };
 
-  const handleAddSuggestedItem = () => {
-    setGroceryItems((prev) => [
-      ...prev,
-      { ...suggestedItem, suggested: false, id: `1-${Date.now()}` },
-    ]);
-  };
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,7 +178,7 @@ export default function ListDetail() {
     : list.items.filter((item) => item.completed).length;
 
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
+    <div className="bg-white min-h-screen pb-[260px] max-w-[608px] mx-auto">
       {/* Header */}
       <div className="sticky top-0 bg-white z-10">
         <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
@@ -329,32 +313,16 @@ export default function ListDetail() {
             </div>
           ))}
 
-          {/* Suggested Item */}
-          <div className="mt-4 pt-4 border-t border-[#F5F5F5]">
-            <button
-              onClick={handleAddSuggestedItem}
-              className="w-full flex items-center gap-3 py-2 text-left hover:bg-gray-50 rounded-lg px-2 transition-colors"
-            >
-              <div className="w-9 h-9 rounded-xl border-2 border-dashed border-[#CCCCCC] flex items-center justify-center">
-                <span className="text-[#CCCCCC] text-xl">+</span>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-[#2D6A4F]" />
-                  <span className="text-[14px] font-bold text-[#1A1A1A]">
-                    {suggestedItem.text}
-                  </span>
-                </div>
-              </div>
-            </button>
-          </div>
 
           {/* Add Item */}
           <div className="mt-6">
-            <button className="text-[#2D6A4F] text-[14px] font-medium hover:text-[#1F4F38]">
+            
+            <button className="text-[#2D6A4F] text-[14px] font-medium hover:text-[#1F4F38]"
+              onClick={() => navigate("/add-item")}>
               + Add Item
             </button>
           </div>
+          
         </div>
       ) : (
         /* Regular List Layout */

@@ -417,7 +417,7 @@ function Group() {
       <Group5 />
       <Group6 />
       <Group7 />
-      <p className="absolute font-['Inter:Bold',sans-serif] font-bold inset-[57.75%_71.76%_40.26%_9.16%] leading-[normal] mask-alpha mask-intersect mask-no-clip mask-no-repeat mask-position-[-55.695px_-802.676px] mask-size-[608px_1390px] not-italic text-[#2d6a4f] text-[14px]" style={{ maskImage: `url('${imgVector}')` }}>
+      <p className="absolute font-['Inter:Bold',sans-serif] font-bold inset-[40.02%_8.14%_58.45%_87.53%] leading-[normal] mask-alpha mask-intersect mask-no-clip mask-no-repeat mask-position-[-55.695px_-802.676px] mask-size-[608px_1390px] not-italic text-[#2d6a4f] text-[14px]" style={{ maskImage: `url('${imgVector}')` }}>
         + Add Item
       </p>
       <div className="absolute inset-[61.27%_4.07%_33.1%_4.07%] mask-alpha mask-intersect mask-no-clip mask-no-repeat mask-position-[-24.753px_-851.62px] mask-size-[608px_1390px]" data-name="Vector" style={{ maskImage: `url('${imgVector}')` }}>
