@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router";
 import { ArrowLeft, Share2, Sparkles, Send } from "lucide-react";
 import {
   getListById,
-  addItemToList,
   updateItemInList,
   deleteItemFromList,
   ListItem,
@@ -31,7 +30,6 @@ export default function ListDetail() {
   const { listId } = useParams();
   const navigate = useNavigate();
   const [list, setList] = useState(() => getListById(listId || ""));
-  const [newItemText, setNewItemText] = useState("");
   const [aiPrompt, setAiPrompt] = useState("");
 
   useEffect(() => {
@@ -67,21 +65,6 @@ export default function ListDetail() {
       quantity: Math.max(1, item.quantity + delta),
     });
     setList(getListById(listId));
-  };
-
-
-  const handleAddItem = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newItemText.trim() && listId) {
-      const newItem: ListItem = {
-        id: `${listId}-${Date.now()}`,
-        text: newItemText.trim(),
-        completed: false,
-      };
-      addItemToList(listId, newItem);
-      setList(getListById(listId));
-      setNewItemText("");
-    }
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -260,20 +243,25 @@ export default function ListDetail() {
       ) : (
         /* Regular List Layout */
         <div className="px-6 py-4">
-          <div className="mb-4">
-            <form onSubmit={handleAddItem} className="flex gap-3">
-              <input
-                type="text"
-                value={newItemText}
-                onChange={(e) => setNewItemText(e.target.value)}
-                placeholder="Add new item..."
-                className="flex-1 px-4 py-3 border border-[#E0E8E2] rounded-xl bg-[#F0F5F1] text-[#1A1A1A] placeholder:text-[#999999] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]"
-              />
-            </form>
+          <div className="mb-5 flex items-center justify-between rounded-2xl border border-[#E0E8E2] bg-[#F5FAF6] p-4">
+            <div>
+              <p className="text-[14px] font-semibold text-[#1A1A1A]">
+                Need to add something?
+              </p>
+              <p className="text-[12px] text-[#888888]">
+                Open the full add-item flow to choose category, size, and quantity.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate(`/list/${listId}/add-item`)}
+              className="rounded-xl bg-[#2D6A4F] px-4 py-3 text-[12px] font-bold text-white hover:bg-[#255940] transition-colors"
+            >
+              + Add Item
+            </button>
           </div>
           {list.items.length === 0 ? (
             <div className="text-center py-12 text-[#999999]">
-              No items yet. Add your first item above!
+              No items yet. Use the add-item flow to build this list.
             </div>
           ) : (
             <div className="space-y-2">
