@@ -9,11 +9,18 @@ export type StoreDefinition = {
   url: string;
 };
 
+export type ComparedOffer = {
+  brand: string;
+  packageLabel: string;
+  price: number;
+};
+
 export type ComparedItem = {
   id: string;
   name: string;
   category: string;
   quantityLabel: string;
+  offers: Record<StoreKey, ComparedOffer>;
   prices: Record<StoreKey, number>;
   bestStoreKey: StoreKey;
 };
@@ -21,6 +28,8 @@ export type ComparedItem = {
 export type CheckoutStoreItem = {
   id: string;
   name: string;
+  brand: string;
+  packageLabel: string;
   quantityLabel: string;
   price: number;
 };
@@ -31,7 +40,7 @@ export type CheckoutStore = StoreDefinition & {
 };
 
 export type CheckoutPlan = {
-  key: "assistant" | "single-store";
+  key: "assistant" | "single-store" | "manual-selection";
   title: string;
   summary: string;
   stores: CheckoutStore[];
@@ -54,6 +63,12 @@ export type PricingRouteState = {
   listId?: string;
   items?: ListItem[];
   plan?: CheckoutPlan;
+};
+
+type CatalogOffer = {
+  brand: string;
+  packageLabel: string;
+  unitPrice: number;
 };
 
 const fallbackListId = "1";
@@ -79,23 +94,265 @@ export const storeDefinitions: StoreDefinition[] = [
   },
 ];
 
-const priceCatalog: Record<string, Record<StoreKey, number>> = {
-  "milk 2%": { walmart: 5.49, superstore: 5.29, safeway: 5.99 },
-  "cheese slices": { walmart: 4.99, superstore: 4.79, safeway: 5.49 },
-  "greek yogurt": { walmart: 6.29, superstore: 5.99, safeway: 6.49 },
-  eggs: { walmart: 4.79, superstore: 4.59, safeway: 5.19 },
-  bananas: { walmart: 1.49, superstore: 1.29, safeway: 1.69 },
-  spinach: { walmart: 3.99, superstore: 3.49, safeway: 4.29 },
-  avocados: { walmart: 2.49, superstore: 2.29, safeway: 2.79 },
-  tomatoes: { walmart: 4.49, superstore: 4.19, safeway: 4.89 },
-  "chicken breast": { walmart: 12.99, superstore: 11.49, safeway: 13.99 },
-  "ground beef": { walmart: 7.99, superstore: 8.29, safeway: 7.49 },
-  "salmon fillet": { walmart: 11.99, superstore: 10.99, safeway: 12.49 },
-  bread: { walmart: 3.49, superstore: 3.29, safeway: 3.99 },
-  rice: { walmart: 4.99, superstore: 4.59, safeway: 5.49 },
-  pasta: { walmart: 2.29, superstore: 2.09, safeway: 2.69 },
-  "dish soap": { walmart: 3.99, superstore: 4.29, safeway: 4.89 },
-  "paper towels": { walmart: 7.99, superstore: 8.29, safeway: 8.99 },
+const fallbackBrands: Record<StoreKey, string> = {
+  walmart: "Great Value",
+  superstore: "President's Choice",
+  safeway: "Signature Select",
+};
+
+const priceCatalog: Record<string, Record<StoreKey, CatalogOffer>> = {
+  "milk 2%": {
+    walmart: { brand: "Great Value", packageLabel: "4L jug", unitPrice: 5.49 },
+    superstore: {
+      brand: "Neilson",
+      packageLabel: "4L bag",
+      unitPrice: 5.29,
+    },
+    safeway: { brand: "Lucerne", packageLabel: "4L jug", unitPrice: 5.99 },
+  },
+  "cheese slices": {
+    walmart: {
+      brand: "Kraft Singles",
+      packageLabel: "300g pack",
+      unitPrice: 4.99,
+    },
+    superstore: {
+      brand: "President's Choice",
+      packageLabel: "300g pack",
+      unitPrice: 4.79,
+    },
+    safeway: {
+      brand: "Compliments",
+      packageLabel: "300g pack",
+      unitPrice: 5.49,
+    },
+  },
+  "greek yogurt": {
+    walmart: { brand: "Oikos", packageLabel: "750g tub", unitPrice: 6.29 },
+    superstore: {
+      brand: "Liberte",
+      packageLabel: "750g tub",
+      unitPrice: 5.99,
+    },
+    safeway: {
+      brand: "Olympic",
+      packageLabel: "750g tub",
+      unitPrice: 6.49,
+    },
+  },
+  eggs: {
+    walmart: {
+      brand: "Burnbrae Farms",
+      packageLabel: "12 pack",
+      unitPrice: 4.79,
+    },
+    superstore: {
+      brand: "No Name",
+      packageLabel: "12 pack",
+      unitPrice: 4.59,
+    },
+    safeway: {
+      brand: "Compliments",
+      packageLabel: "12 pack",
+      unitPrice: 5.19,
+    },
+  },
+  bananas: {
+    walmart: { brand: "Dole", packageLabel: "fresh bunch", unitPrice: 1.49 },
+    superstore: {
+      brand: "No Name Produce",
+      packageLabel: "fresh bunch",
+      unitPrice: 1.29,
+    },
+    safeway: {
+      brand: "Signature Farms",
+      packageLabel: "fresh bunch",
+      unitPrice: 1.69,
+    },
+  },
+  spinach: {
+    walmart: {
+      brand: "Earthbound Farm",
+      packageLabel: "300g clamshell",
+      unitPrice: 3.99,
+    },
+    superstore: {
+      brand: "PC Organics",
+      packageLabel: "300g clamshell",
+      unitPrice: 3.49,
+    },
+    safeway: {
+      brand: "Compliments",
+      packageLabel: "300g clamshell",
+      unitPrice: 4.29,
+    },
+  },
+  avocados: {
+    walmart: {
+      brand: "Avocados From Mexico",
+      packageLabel: "single avocado",
+      unitPrice: 2.49,
+    },
+    superstore: {
+      brand: "No Name Produce",
+      packageLabel: "single avocado",
+      unitPrice: 2.29,
+    },
+    safeway: {
+      brand: "Signature Farms",
+      packageLabel: "single avocado",
+      unitPrice: 2.79,
+    },
+  },
+  tomatoes: {
+    walmart: { brand: "Sunset", packageLabel: "500g pack", unitPrice: 4.49 },
+    superstore: {
+      brand: "President's Choice",
+      packageLabel: "500g pack",
+      unitPrice: 4.19,
+    },
+    safeway: {
+      brand: "Signature Farms",
+      packageLabel: "500g pack",
+      unitPrice: 4.89,
+    },
+  },
+  "chicken breast": {
+    walmart: {
+      brand: "Maple Leaf",
+      packageLabel: "1kg tray",
+      unitPrice: 12.99,
+    },
+    superstore: {
+      brand: "PC Free From",
+      packageLabel: "1kg tray",
+      unitPrice: 11.49,
+    },
+    safeway: {
+      brand: "Open Nature",
+      packageLabel: "1kg tray",
+      unitPrice: 13.99,
+    },
+  },
+  "ground beef": {
+    walmart: {
+      brand: "Your Fresh Market",
+      packageLabel: "500g tray",
+      unitPrice: 7.99,
+    },
+    superstore: {
+      brand: "President's Choice",
+      packageLabel: "500g tray",
+      unitPrice: 8.29,
+    },
+    safeway: {
+      brand: "Open Nature",
+      packageLabel: "500g tray",
+      unitPrice: 7.49,
+    },
+  },
+  "salmon fillet": {
+    walmart: {
+      brand: "Ocean Jewel",
+      packageLabel: "500g tray",
+      unitPrice: 11.99,
+    },
+    superstore: {
+      brand: "Atlantic Sea Farms",
+      packageLabel: "500g tray",
+      unitPrice: 10.99,
+    },
+    safeway: {
+      brand: "Open Nature",
+      packageLabel: "500g tray",
+      unitPrice: 12.49,
+    },
+  },
+  bread: {
+    walmart: {
+      brand: "Dempster's",
+      packageLabel: "1 loaf",
+      unitPrice: 3.49,
+    },
+    superstore: {
+      brand: "Wonder",
+      packageLabel: "1 loaf",
+      unitPrice: 3.29,
+    },
+    safeway: {
+      brand: "Country Harvest",
+      packageLabel: "1 loaf",
+      unitPrice: 3.99,
+    },
+  },
+  rice: {
+    walmart: {
+      brand: "Ben's Original",
+      packageLabel: "1kg bag",
+      unitPrice: 4.99,
+    },
+    superstore: {
+      brand: "No Name",
+      packageLabel: "1kg bag",
+      unitPrice: 4.59,
+    },
+    safeway: {
+      brand: "Ben's Original",
+      packageLabel: "1kg bag",
+      unitPrice: 5.49,
+    },
+  },
+  pasta: {
+    walmart: {
+      brand: "Catelli",
+      packageLabel: "454g box",
+      unitPrice: 2.29,
+    },
+    superstore: {
+      brand: "No Name",
+      packageLabel: "454g box",
+      unitPrice: 2.09,
+    },
+    safeway: {
+      brand: "Barilla",
+      packageLabel: "454g box",
+      unitPrice: 2.69,
+    },
+  },
+  "dish soap": {
+    walmart: {
+      brand: "Dawn",
+      packageLabel: "500mL bottle",
+      unitPrice: 3.99,
+    },
+    superstore: {
+      brand: "Sunlight",
+      packageLabel: "500mL bottle",
+      unitPrice: 4.29,
+    },
+    safeway: {
+      brand: "Palmolive",
+      packageLabel: "500mL bottle",
+      unitPrice: 4.89,
+    },
+  },
+  "paper towels": {
+    walmart: {
+      brand: "Bounty",
+      packageLabel: "6 roll pack",
+      unitPrice: 7.99,
+    },
+    superstore: {
+      brand: "President's Choice",
+      packageLabel: "6 roll pack",
+      unitPrice: 8.29,
+    },
+    safeway: {
+      brand: "SpongeTowels",
+      packageLabel: "6 roll pack",
+      unitPrice: 8.99,
+    },
+  },
 };
 
 function roundCurrency(value: number): number {
@@ -118,34 +375,6 @@ function formatQuantityLabel(item: ListItem): string {
   return `${getUnit(item)} × ${getQuantity(item)}`;
 }
 
-function getFallbackPrices(itemName: string): Record<StoreKey, number> {
-  const seed = Array.from(itemName.toLowerCase()).reduce(
-    (sum, character) => sum + character.charCodeAt(0),
-    0
-  );
-  const basePrice = 2.75 + (seed % 450) / 100;
-
-  return {
-    walmart: roundCurrency(basePrice),
-    superstore: roundCurrency(Math.max(1.49, basePrice - 0.28)),
-    safeway: roundCurrency(basePrice + 0.44),
-  };
-}
-
-function getBasePrices(itemName: string): Record<StoreKey, number> {
-  return priceCatalog[itemName.toLowerCase()] ?? getFallbackPrices(itemName);
-}
-
-function getCheapestStoreKey(prices: Record<StoreKey, number>): StoreKey {
-  return storeDefinitions.reduce((bestKey, store) => {
-    if (prices[store.key] < prices[bestKey]) {
-      return store.key;
-    }
-
-    return bestKey;
-  }, storeDefinitions[0].key);
-}
-
 function createEmptyCheckoutStore(store: StoreDefinition): CheckoutStore {
   return {
     ...store,
@@ -166,6 +395,63 @@ function getListSource(state?: PricingRouteState) {
   };
 }
 
+function getFallbackOffers(item: ListItem): Record<StoreKey, CatalogOffer> {
+  const seed = Array.from(item.text.toLowerCase()).reduce(
+    (sum, character) => sum + character.charCodeAt(0),
+    0
+  );
+  const basePrice = 2.75 + (seed % 450) / 100;
+  const packageLabel = getUnit(item) === "each" ? "standard pack" : getUnit(item);
+
+  return {
+    walmart: {
+      brand: fallbackBrands.walmart,
+      packageLabel,
+      unitPrice: roundCurrency(basePrice),
+    },
+    superstore: {
+      brand: fallbackBrands.superstore,
+      packageLabel,
+      unitPrice: roundCurrency(Math.max(1.49, basePrice - 0.28)),
+    },
+    safeway: {
+      brand: fallbackBrands.safeway,
+      packageLabel,
+      unitPrice: roundCurrency(basePrice + 0.44),
+    },
+  };
+}
+
+function getBaseOffers(item: ListItem): Record<StoreKey, CatalogOffer> {
+  return priceCatalog[item.text.toLowerCase()] ?? getFallbackOffers(item);
+}
+
+function getCheapestStoreKey(prices: Record<StoreKey, number>): StoreKey {
+  return storeDefinitions.reduce((bestKey, store) => {
+    if (prices[store.key] < prices[bestKey]) {
+      return store.key;
+    }
+
+    return bestKey;
+  }, storeDefinitions[0].key);
+}
+
+function createCheckoutItem(
+  item: ComparedItem,
+  storeKey: StoreKey
+): CheckoutStoreItem {
+  const selectedOffer = item.offers[storeKey];
+
+  return {
+    id: item.id,
+    name: item.name,
+    brand: selectedOffer.brand,
+    packageLabel: selectedOffer.packageLabel,
+    quantityLabel: item.quantityLabel,
+    price: selectedOffer.price,
+  };
+}
+
 export function buildComparisonData(
   listId: string,
   sourceItems?: ListItem[]
@@ -178,11 +464,28 @@ export function buildComparisonData(
   const items = sourceItems?.length ? sourceItems : list.items;
   const comparedItems: ComparedItem[] = items.map((item) => {
     const quantity = getQuantity(item);
-    const basePrices = getBasePrices(item.text);
+    const baseOffers = getBaseOffers(item);
+    const offers: Record<StoreKey, ComparedOffer> = {
+      walmart: {
+        brand: baseOffers.walmart.brand,
+        packageLabel: baseOffers.walmart.packageLabel,
+        price: roundCurrency(baseOffers.walmart.unitPrice * quantity),
+      },
+      superstore: {
+        brand: baseOffers.superstore.brand,
+        packageLabel: baseOffers.superstore.packageLabel,
+        price: roundCurrency(baseOffers.superstore.unitPrice * quantity),
+      },
+      safeway: {
+        brand: baseOffers.safeway.brand,
+        packageLabel: baseOffers.safeway.packageLabel,
+        price: roundCurrency(baseOffers.safeway.unitPrice * quantity),
+      },
+    };
     const prices: Record<StoreKey, number> = {
-      walmart: roundCurrency(basePrices.walmart * quantity),
-      superstore: roundCurrency(basePrices.superstore * quantity),
-      safeway: roundCurrency(basePrices.safeway * quantity),
+      walmart: offers.walmart.price,
+      superstore: offers.superstore.price,
+      safeway: offers.safeway.price,
     };
 
     return {
@@ -190,6 +493,7 @@ export function buildComparisonData(
       name: item.text,
       category: getCategory(item),
       quantityLabel: formatQuantityLabel(item),
+      offers,
       prices,
       bestStoreKey: getCheapestStoreKey(prices),
     };
@@ -222,14 +526,9 @@ export function buildComparisonData(
 
   comparedItems.forEach((item) => {
     const assignedStore = assistantStoresMap[item.bestStoreKey];
-    const linePrice = item.prices[item.bestStoreKey];
-    assignedStore.items.push({
-      id: item.id,
-      name: item.name,
-      quantityLabel: item.quantityLabel,
-      price: linePrice,
-    });
-    assignedStore.total = roundCurrency(assignedStore.total + linePrice);
+    const lineItem = createCheckoutItem(item, item.bestStoreKey);
+    assignedStore.items.push(lineItem);
+    assignedStore.total = roundCurrency(assignedStore.total + lineItem.price);
   });
 
   const assistantStores = storeDefinitions
@@ -242,12 +541,8 @@ export function buildComparisonData(
 
   const singleStorePlanStore = createEmptyCheckoutStore(cheapestTotalStore);
   comparedItems.forEach((item) => {
-    singleStorePlanStore.items.push({
-      id: item.id,
-      name: item.name,
-      quantityLabel: item.quantityLabel,
-      price: item.prices[cheapestTotalStore.key],
-    });
+    const lineItem = createCheckoutItem(item, cheapestTotalStore.key);
+    singleStorePlanStore.items.push(lineItem);
   });
   singleStorePlanStore.total = totals[cheapestTotalStore.key];
 
@@ -283,6 +578,57 @@ export function buildComparisonData(
       total: singleStorePlanStore.total,
       savings: 0,
     },
+  };
+}
+
+export function buildManualSelectionPlan(
+  comparisonData: ComparisonData,
+  selections: Partial<Record<string, StoreKey>>
+): CheckoutPlan {
+  const selectedStoresMap: Record<StoreKey, CheckoutStore> = {
+    walmart: createEmptyCheckoutStore(storeDefinitions[0]),
+    superstore: createEmptyCheckoutStore(storeDefinitions[1]),
+    safeway: createEmptyCheckoutStore(storeDefinitions[2]),
+  };
+
+  comparisonData.items.forEach((item) => {
+    const selectedStoreKey =
+      selections[item.id] ?? comparisonData.cheapestTotalStoreKey;
+    const lineItem = createCheckoutItem(item, selectedStoreKey);
+    selectedStoresMap[selectedStoreKey].items.push(lineItem);
+    selectedStoresMap[selectedStoreKey].total = roundCurrency(
+      selectedStoresMap[selectedStoreKey].total + lineItem.price
+    );
+  });
+
+  const stores = storeDefinitions
+    .map((store) => selectedStoresMap[store.key])
+    .filter((store) => store.items.length > 0);
+
+  const total = roundCurrency(
+    stores.reduce((sum, store) => sum + store.total, 0)
+  );
+
+  const baselineTotal = comparisonData.singleStorePlan.total;
+  const savings = roundCurrency(Math.max(0, baselineTotal - total));
+  const storeSummary =
+    stores.length === 1
+      ? `You selected ${stores[0].name} for the whole basket.`
+      : `You built a custom basket across ${stores.length} stores.`;
+  const savingsSummary =
+    savings > 0
+      ? ` This saves ${formatCurrency(
+          savings
+        )} compared with the best one-store checkout.`
+      : "";
+
+  return {
+    key: "manual-selection",
+    title: "Manual Selection",
+    summary: `${storeSummary}${savingsSummary}`,
+    stores,
+    total,
+    savings,
   };
 }
 

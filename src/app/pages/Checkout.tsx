@@ -113,13 +113,31 @@ export default function Checkout() {
               </p>
             </div>
 
-            <ul className="text-[12px] text-[#777777] space-y-1 pl-4 list-disc mb-3">
+            <div className="space-y-2 mb-3">
               {store.items.map((item) => (
-                <li key={item.id}>
-                  {item.name} · {item.quantityLabel} · {formatCurrency(item.price)}
-                </li>
+                <div
+                  key={item.id}
+                  className="rounded-xl border border-[#EEEEEE] bg-white px-3 py-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[12px] font-semibold text-[#1A1A1A]">
+                        {item.name}
+                      </p>
+                      <p className="text-[11px] text-[#666666]">
+                        {item.brand} · {item.packageLabel}
+                      </p>
+                      <p className="text-[11px] text-[#999999]">
+                        {item.quantityLabel}
+                      </p>
+                    </div>
+                    <p className="text-[12px] font-semibold text-[#1A1A1A]">
+                      {formatCurrency(item.price)}
+                    </p>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
 
             <button
               onClick={() => window.open(store.url, "_blank")}

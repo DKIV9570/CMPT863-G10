@@ -1,10 +1,13 @@
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 import BottomNav from "../components/BottomNav";
 import {
+  buildManualSelectionPlan,
   formatCurrency,
   PricingRouteState,
   resolveComparisonData,
+  StoreKey,
 } from "../utils/pricing";
 
 export default function PriceComparison() {
@@ -12,6 +15,18 @@ export default function PriceComparison() {
   const location = useLocation();
   const routeState = location.state as PricingRouteState | undefined;
   const comparisonData = resolveComparisonData(routeState);
+  const [manualSelections, setManualSelections] = useState<
+    Partial<Record<string, StoreKey>>
+  >({});
+
+  useEffect(() => {
+    setManualSelections({});
+  }, [comparisonData?.listId]);
+
+  const manualPlan = useMemo(() => {
+    if (!comparisonData) return null;
+    return buildManualSelectionPlan(comparisonData, manualSelections);
+  }, [comparisonData, manualSelections]);
 
   const handleChooseForMe = () => {
     if (!comparisonData) return;
@@ -25,14 +40,21 @@ export default function PriceComparison() {
     });
   };
 
+  const handleManualOfferSelect = (itemId: string, storeKey: StoreKey) => {
+    setManualSelections((current) => ({
+      ...current,
+      [itemId]: storeKey,
+    }));
+  };
+
   const handleManualCheckout = () => {
-    if (!comparisonData) return;
+    if (!comparisonData || !manualPlan) return;
 
     navigate("/checkout", {
       state: {
         listId: comparisonData.listId,
         items: routeState?.items,
-        plan: comparisonData.singleStorePlan,
+        plan: manualPlan,
       },
     });
   };
@@ -173,19 +195,55 @@ export default function PriceComparison() {
             </div>
           </section>
 
+          <section className="rounded-[26px] border border-[#DCE7DE] bg-white p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-[16px] font-bold text-[#1A1A1A]">
+                  Manual selection
+                </h2>
+                <p className="mt-1 text-[12px] text-[#888888]">
+                  Tap any offer below to build your own basket. Brand is shown
+                  as part of each store option, but it is not a separate
+                  control.
+                </p>
+              </div>
+              <div className="rounded-full bg-[#F5FAF6] px-3 py-2 text-[12px] font-bold text-[#2D6A4F] border border-[#DCE7DE] whitespace-nowrap">
+                {manualPlan ? formatCurrency(manualPlan.total) : "--"}
+              </div>
+            </div>
+
+            {manualPlan && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold text-[#1A1A1A] border border-[#DCE7DE]">
+                  {manualPlan.stores.length} store
+                  {manualPlan.stores.length === 1 ? "" : "s"}
+                </span>
+                <span className="rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold text-[#1A1A1A] border border-[#DCE7DE]">
+                  {comparisonData.items.length} selected offers
+                </span>
+                {manualPlan.savings > 0 && (
+                  <span className="rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold text-[#2D6A4F] border border-[#DCE7DE]">
+                    Saves {formatCurrency(manualPlan.savings)}
+                  </span>
+                )}
+              </div>
+            )}
+          </section>
+
           <section>
             <div className="mb-3">
               <h2 className="text-[16px] font-bold text-[#1A1A1A]">
                 Item-by-item breakdown
               </h2>
               <p className="text-[12px] text-[#888888]">
-                Each card shows the cheapest store first for quick mobile
-                scanning.
+                Each card lists store offers with brand, package, and price.
               </p>
             </div>
 
             <div className="space-y-3">
               {comparisonData.items.map((item) => {
+                const selectedStoreKey =
+                  manualSelections[item.id] ?? comparisonData.cheapestTotalStoreKey;
                 const orderedStores = [...comparisonData.stores].sort(
                   (firstStore, secondStore) =>
                     item.prices[firstStore.key] - item.prices[secondStore.key]
@@ -212,46 +270,69 @@ export default function PriceComparison() {
 
                     <div className="mt-4 space-y-2">
                       {orderedStores.map((store) => {
+                        const offer = item.offers[store.key];
                         const isBest = item.bestStoreKey === store.key;
+                        const isSelected = selectedStoreKey === store.key;
 
                         return (
-                          <div
+                          <button
                             key={store.key}
-                            className={`rounded-2xl border px-3 py-3 ${
-                              isBest
-                                ? "border-[#B7D7C2] bg-[#F3FAF5]"
-                                : "border-[#EEEEEE] bg-[#FCFCFC]"
+                            type="button"
+                            onClick={() => handleManualOfferSelect(item.id, store.key)}
+                            className={`w-full rounded-2xl border px-3 py-3 text-left transition-colors ${
+                              isSelected
+                                ? "border-[#2D6A4F] bg-[#F3FAF5] shadow-[0_0_0_1px_rgba(45,106,79,0.08)]"
+                                : "border-[#EEEEEE] bg-[#FCFCFC] hover:border-[#D8E2DB]"
                             }`}
                           >
                             <div className="flex items-center justify-between gap-3">
                               <div className="flex items-center gap-3">
                                 <div
-                                  className="w-2.5 h-2.5 rounded-full"
+                                  className={`w-2.5 h-2.5 rounded-full ${
+                                    isSelected ? "ring-4 ring-[#DCEDE3]" : ""
+                                  }`}
                                   style={{ backgroundColor: store.color }}
                                 />
                                 <div>
-                                  <p className="text-[14px] font-semibold text-[#1A1A1A]">
-                                    {store.name}
-                                  </p>
-                                  <p className="text-[11px] text-[#888888]">
-                                    {isBest
-                                      ? "Best price for this item"
-                                      : "Available at this store"}
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-[14px] font-semibold text-[#1A1A1A]">
+                                      {store.name}
+                                    </p>
+                                    {isBest && (
+                                      <span className="rounded-full border border-[#DCE7DE] bg-white px-2 py-0.5 text-[10px] font-semibold text-[#5A8A66]">
+                                        Lowest price
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-[11px] text-[#666666]">
+                                    {offer.brand} · {offer.packageLabel}
                                   </p>
                                 </div>
                               </div>
                               <div className="text-right">
                                 <p className="text-[15px] font-bold text-[#1A1A1A]">
-                                  {formatCurrency(item.prices[store.key])}
+                                  {formatCurrency(offer.price)}
                                 </p>
-                                {isBest && (
-                                  <p className="text-[11px] font-semibold text-[#2D6A4F]">
-                                    Save most here
-                                  </p>
-                                )}
+                                <p
+                                  className={`text-[11px] font-semibold ${
+                                    isSelected
+                                      ? "text-[#2D6A4F]"
+                                      : isBest
+                                      ? "text-[#6F7D74]"
+                                      : "text-[#888888]"
+                                  }`}
+                                >
+                                  {isSelected
+                                    ? isBest
+                                      ? "Selected for manual checkout"
+                                      : "Selected for manual checkout"
+                                    : isBest
+                                    ? "Best-value alternative"
+                                    : "Tap to select"}
+                                </p>
                               </div>
                             </div>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
@@ -274,7 +355,7 @@ export default function PriceComparison() {
           onClick={handleManualCheckout}
           className="w-full py-3 border border-gray-300 rounded-xl font-bold hover:bg-gray-50 transition-colors"
         >
-          Manual Checkout — One Store
+          Manual Checkout — Selected Offers
         </button>
       </div>
 
