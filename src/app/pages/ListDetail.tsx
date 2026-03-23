@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useLocation, useParams, useNavigate } from "react-router";
 import { ArrowLeft, Share2, Sparkles, Send } from "lucide-react";
 import {
   getListById,
@@ -8,6 +8,9 @@ import {
   ListItem,
 } from "../store/listsStore";
 import BottomNav from "../components/BottomNav";
+import FeedbackBanner from "../components/FeedbackBanner";
+import { useTransientFeedback } from "../hooks/useTransientFeedback";
+import type { ActionFeedback } from "../types/feedback";
 
 export interface GroceryItem extends ListItem {
   category: string;
@@ -29,8 +32,13 @@ function normalizeGroceryItem(item: ListItem): GroceryItem {
 export default function ListDetail() {
   const { listId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const routeState = location.state as { feedback?: ActionFeedback } | undefined;
   const [list, setList] = useState(() => getListById(listId || ""));
   const [aiPrompt, setAiPrompt] = useState("");
+  const { activeFeedback, dismissFeedback } = useTransientFeedback(
+    routeState?.feedback
+  );
 
   useEffect(() => {
     if (!list) {
@@ -93,8 +101,24 @@ export default function ListDetail() {
     ? groceryItems.filter((item) => item.completed).length
     : list.items.filter((item) => item.completed).length;
 
+  const addItemCallout = (
+    <div className="mb-5 flex items-center justify-between rounded-2xl border border-[#E0E8E2] bg-[#F5FAF6] p-4">
+      <div>
+        <p className="text-[14px] font-semibold text-[#1A1A1A]">
+          Need to add something?
+        </p>
+      </div>
+      <button
+        onClick={() => navigate(`/list/${listId}/add-item`)}
+        className="rounded-xl bg-[#2D6A4F] px-4 py-3 text-[12px] font-bold text-white hover:bg-[#255940] transition-colors"
+      >
+        + Add Item
+      </button>
+    </div>
+  );
+
   return (
-    <div className="bg-white min-h-screen pb-[260px] max-w-[3000px] mx-auto">
+    <div className="bg-white min-h-screen pb-[260px] max-w-[608px] mx-auto">
       {/* Header */}
       <div className="sticky top-0 bg-white z-10">
         <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
@@ -133,9 +157,17 @@ export default function ListDetail() {
         </div>
       </div>
 
+      {activeFeedback && (
+        <FeedbackBanner
+          feedback={activeFeedback}
+          onDismiss={dismissFeedback}
+        />
+      )}
+
       {/* Items List - Weekly Groceries Special Layout */}
       {isWeeklyGroceries ? (
         <div className="px-6 py-4">
+          {addItemCallout}
           {categories.map((category) => (
             <div key={category} className="mb-6">
               <div className="flex items-center justify-between mb-3">
@@ -228,37 +260,11 @@ export default function ListDetail() {
               </div>
             </div>
           ))}
-
-
-          {/* Add Item */}
-          <div className="mt-6">
-            
-            <button className="text-[#2D6A4F] text-[14px] font-medium hover:text-[#1F4F38]"
-              onClick={() => navigate(`/list/${listId}/add-item`)}>
-              + Add Item
-            </button>
-          </div>
-          
         </div>
       ) : (
         /* Regular List Layout */
         <div className="px-6 py-4">
-          <div className="mb-5 flex items-center justify-between rounded-2xl border border-[#E0E8E2] bg-[#F5FAF6] p-4">
-            <div>
-              <p className="text-[14px] font-semibold text-[#1A1A1A]">
-                Need to add something?
-              </p>
-              <p className="text-[12px] text-[#888888]">
-                Open the full add-item flow to choose category, size, and quantity.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate(`/list/${listId}/add-item`)}
-              className="rounded-xl bg-[#2D6A4F] px-4 py-3 text-[12px] font-bold text-white hover:bg-[#255940] transition-colors"
-            >
-              + Add Item
-            </button>
-          </div>
+          {addItemCallout}
           {list.items.length === 0 ? (
             <div className="text-center py-12 text-[#999999]">
               No items yet. Use the add-item flow to build this list.
@@ -319,7 +325,7 @@ export default function ListDetail() {
 
       {/* AI Input & Actions */}
       {list.items.length > 0 && (
-        <div className="fixed bottom-[111px] left-0 right-0 bg-white border-t border-[#F5F5F5] p-4 max-w-[3000px] mx-auto">
+        <div className="fixed bottom-[111px] left-0 right-0 bg-white border-t border-[#F5F5F5] p-4 max-w-[608px] mx-auto">
           <div className="mb-3">
             <div className="flex items-center gap-3 bg-[#F0F5F1] rounded-2xl px-4 py-3 border border-[#E0E8E2]">
               <Sparkles className="w-5 h-5 text-[#2D6A4F] opacity-50" />
@@ -342,6 +348,13 @@ export default function ListDetail() {
                   state: {
                     listId,
                     items: isWeeklyGroceries ? groceryItems : list.items,
+                    feedback: {
+                      title: "Comparison ready",
+                      message: `Comparing ${
+                        isWeeklyGroceries ? groceryItems.length : list.items.length
+                      } items across 3 stores.`,
+                      tone: "info",
+                    },
                   },
                 })
               }
@@ -354,6 +367,11 @@ export default function ListDetail() {
                   state: {
                     listId,
                     items: isWeeklyGroceries ? groceryItems : list.items,
+                    feedback: {
+                      title: "Checkout ready",
+                      message: "Your basket is ready to review and continue.",
+                      tone: "success",
+                    },
                   },
                 })
               }

@@ -165,7 +165,7 @@ export default function AIRules() {
   };
 
   return (
-    <div className="bg-white min-h-screen pb-[132px] max-w-[3000px] mx-auto">
+    <div className="bg-white min-h-screen pb-[132px] max-w-[608px] mx-auto">
       <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
         <span>9:41</span>
         <div className="flex items-center gap-2">

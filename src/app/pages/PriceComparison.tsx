@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 import BottomNav from "../components/BottomNav";
+import FeedbackBanner from "../components/FeedbackBanner";
+import { useTransientFeedback } from "../hooks/useTransientFeedback";
 import {
   buildManualSelectionPlan,
   formatCurrency,
@@ -15,6 +17,9 @@ export default function PriceComparison() {
   const location = useLocation();
   const routeState = location.state as PricingRouteState | undefined;
   const comparisonData = resolveComparisonData(routeState);
+  const { activeFeedback, dismissFeedback } = useTransientFeedback(
+    routeState?.feedback
+  );
   const [manualSelections, setManualSelections] = useState<
     Partial<Record<string, StoreKey>>
   >({});
@@ -36,6 +41,11 @@ export default function PriceComparison() {
         listId: comparisonData.listId,
         items: routeState?.items,
         plan: comparisonData.assistantPlan,
+        feedback: {
+          title: "Best-value basket ready",
+          message: "The AI prepared the lowest combined basket across stores.",
+          tone: "success",
+        },
       },
     });
   };
@@ -55,13 +65,18 @@ export default function PriceComparison() {
         listId: comparisonData.listId,
         items: routeState?.items,
         plan: manualPlan,
+        feedback: {
+          title: "Manual basket ready",
+          message: "Your selected offers are ready for checkout.",
+          tone: "success",
+        },
       },
     });
   };
 
   if (!comparisonData) {
     return (
-      <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
+      <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
         <div className="px-6 pt-20">
           <h1 className="text-[26px] font-bold text-[#1A1A1A]">
             Price Comparison
@@ -82,7 +97,7 @@ export default function PriceComparison() {
   }
 
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
+    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
       <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
         <span>9:41</span>
         <div className="flex items-center gap-2">
@@ -133,6 +148,13 @@ export default function PriceComparison() {
           </div>
         </div>
       </div>
+
+      {activeFeedback && (
+        <FeedbackBanner
+          feedback={activeFeedback}
+          onDismiss={dismissFeedback}
+        />
+      )}
 
       {comparisonData.items.length === 0 ? (
         <div className="px-6 pt-8 text-center text-[14px] text-[#888888]">
