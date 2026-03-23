@@ -18,87 +18,21 @@ export interface GroceryItem extends ListItem {
   suggested?: boolean;
 }
 
+function normalizeGroceryItem(item: ListItem): GroceryItem {
+  return {
+    ...item,
+    category: item.category ?? "Other",
+    quantity: item.quantity ?? 1,
+    unit: item.unit ?? "each",
+  };
+}
+
 export default function ListDetail() {
   const { listId } = useParams();
   const navigate = useNavigate();
   const [list, setList] = useState(() => getListById(listId || ""));
   const [newItemText, setNewItemText] = useState("");
   const [aiPrompt, setAiPrompt] = useState("");
-
-  // Enhanced grocery items with categories and quantities for Weekly Groceries
-  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>([
-    // Dairy
-    {
-      id: "1-1",
-      text: "Milk-2%",
-      completed: true,
-      category: "Dairy",
-      quantity: 2,
-      unit: "L",
-      badge: "SALE",
-    },
-    {
-      id: "1-2",
-      text: "Cheese Slices",
-      completed: false,
-      category: "Dairy",
-      quantity: 1,
-      unit: "300g",
-    },
-    {
-      id: "1-3",
-      text: "Greek Yogurt",
-      completed: true,
-      category: "Dairy",
-      quantity: 1,
-      unit: "750g",
-    },
-    // Meat
-    {
-      id: "1-4",
-      text: "Chicken Breast",
-      completed: false,
-      category: "Meat",
-      quantity: 1,
-      unit: "1kg",
-      badge: "SALE",
-    },
-    {
-      id: "1-5",
-      text: "Ground Beef",
-      completed: false,
-      category: "Meat",
-      quantity: 2,
-      unit: "500g",
-    },
-    // Produce
-    {
-      id: "1-6",
-      text: "Bananas",
-      completed: true,
-      category: "Produce",
-      quantity: 1,
-      unit: "bunch",
-    },
-    {
-      id: "1-7",
-      text: "Spinach",
-      completed: false,
-      category: "Produce",
-      quantity: 1,
-      unit: "300g",
-      badge: "SALE",
-    },
-    {
-      id: "1-8",
-      text: "Avocados",
-      completed: false,
-      category: "Produce",
-      quantity: 3,
-      unit: "each",
-      badge: "OUT",
-    },
-  ]);
 
   useEffect(() => {
     if (!list) {
@@ -109,15 +43,12 @@ export default function ListDetail() {
   if (!list) return null;
 
   const isWeeklyGroceries = list.id === "1";
+  const groceryItems = isWeeklyGroceries
+    ? list.items.map(normalizeGroceryItem)
+    : [];
 
   const handleToggleItem = (itemId: string) => {
-    if (isWeeklyGroceries) {
-      setGroceryItems((prev) =>
-        prev.map((item) =>
-          item.id === itemId ? { ...item, completed: !item.completed } : item
-        )
-      );
-    } else if (listId) {
+    if (listId) {
       const item = list.items.find((i) => i.id === itemId);
       if (item) {
         updateItemInList(listId, itemId, { completed: !item.completed });
@@ -127,13 +58,15 @@ export default function ListDetail() {
   };
 
   const handleQuantityChange = (itemId: string, delta: number) => {
-    setGroceryItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
-    );
+    if (!listId) return;
+
+    const item = groceryItems.find((entry) => entry.id === itemId);
+    if (!item) return;
+
+    updateItemInList(listId, itemId, {
+      quantity: Math.max(1, item.quantity + delta),
+    });
+    setList(getListById(listId));
   };
 
 
@@ -318,7 +251,7 @@ export default function ListDetail() {
           <div className="mt-6">
             
             <button className="text-[#2D6A4F] text-[14px] font-medium hover:text-[#1F4F38]"
-              onClick={() => navigate("/add-item")}>
+              onClick={() => navigate(`/list/${listId}/add-item`)}>
               + Add Item
             </button>
           </div>

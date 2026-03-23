@@ -31,6 +31,10 @@ export const router = createBrowserRouter([
     Component: AIRules,
   },
   {
+    path: "/list/:listId/add-item",
+    Component: AddItem,
+  },
+  {
     path: "*",
     Component: NotFound,
   },

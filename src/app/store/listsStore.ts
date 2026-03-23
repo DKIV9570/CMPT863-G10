@@ -2,6 +2,11 @@ export interface ListItem {
   id: string;
   text: string;
   completed: boolean;
+  category?: string;
+  quantity?: number;
+  unit?: string;
+  badge?: "SALE" | "OUT";
+  suggested?: boolean;
 }
 
 export interface ShoppingList {
@@ -19,18 +24,74 @@ export const initialLists: ShoppingList[] = [
     name: "Weekly Groceries",
     color: "#4CAF50",
     items: [
-      { id: "1-1", text: "Milk", completed: false },
-      { id: "1-2", text: "Eggs", completed: true },
-      { id: "1-3", text: "Bread", completed: false },
-      { id: "1-4", text: "Butter", completed: false },
-      { id: "1-5", text: "Cheese", completed: true },
-      { id: "1-6", text: "Yogurt", completed: false },
-      { id: "1-7", text: "Apples", completed: false },
-      { id: "1-8", text: "Bananas", completed: true },
-      { id: "1-9", text: "Chicken breast", completed: false },
-      { id: "1-10", text: "Rice", completed: false },
-      { id: "1-11", text: "Pasta", completed: false },
-      { id: "1-12", text: "Tomatoes", completed: false },
+      {
+        id: "1-1",
+        text: "Milk 2%",
+        completed: true,
+        category: "Dairy",
+        quantity: 2,
+        unit: "4L",
+        badge: "SALE",
+      },
+      {
+        id: "1-2",
+        text: "Cheese Slices",
+        completed: false,
+        category: "Dairy",
+        quantity: 1,
+        unit: "300g",
+      },
+      {
+        id: "1-3",
+        text: "Greek Yogurt",
+        completed: true,
+        category: "Dairy",
+        quantity: 1,
+        unit: "750g",
+      },
+      {
+        id: "1-4",
+        text: "Chicken Breast",
+        completed: false,
+        category: "Meat",
+        quantity: 1,
+        unit: "1kg",
+        badge: "SALE",
+      },
+      {
+        id: "1-5",
+        text: "Ground Beef",
+        completed: false,
+        category: "Meat",
+        quantity: 2,
+        unit: "500g",
+      },
+      {
+        id: "1-6",
+        text: "Bananas",
+        completed: true,
+        category: "Produce",
+        quantity: 1,
+        unit: "bunch",
+      },
+      {
+        id: "1-7",
+        text: "Spinach",
+        completed: false,
+        category: "Produce",
+        quantity: 1,
+        unit: "300g",
+        badge: "SALE",
+      },
+      {
+        id: "1-8",
+        text: "Avocados",
+        completed: false,
+        category: "Produce",
+        quantity: 3,
+        unit: "each",
+        badge: "OUT",
+      },
     ],
     modifiedDate: "Mar 3, 2026",
   },
