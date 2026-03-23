@@ -5,6 +5,8 @@ import Settings from "./pages/Settings";
 import Receipt from "./pages/Receipt";
 import NotFound from "./pages/NotFound";
 import AddItem from "./pages/AddItem";
+import PriceComparison from "./pages/PriceComparison";
+import Checkout from "./pages/Checkout";
 
 export const router = createBrowserRouter([
   {
@@ -30,5 +32,14 @@ export const router = createBrowserRouter([
   {
     path: "/add-item",
     Component: AddItem,
+  },
+  {
+    path: "/price-comparison",
+    Component: PriceComparison,
+  },
+  {
+    path: "/checkout",
+    Component: Checkout,
   }
+
 ]);
