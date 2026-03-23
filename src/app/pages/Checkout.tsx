@@ -18,7 +18,7 @@ export default function Checkout() {
 
   if (!comparisonData || !selectedPlan) {
     return (
-      <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
+      <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
         <div className="px-6 pt-20">
           <h1 className="text-[26px] font-bold text-[#1A1A1A]">Checkout</h1>
           <p className="mt-3 text-[14px] text-[#666666]">
@@ -37,7 +37,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
+    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
       <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
         <span>9:41</span>
         <div className="flex items-center gap-2">
