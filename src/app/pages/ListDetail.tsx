@@ -329,8 +329,8 @@ export default function ListDetail() {
         </div>
       )}
 
-      {/* AI Input & Actions (for Weekly Groceries) */}
-      {isWeeklyGroceries && (
+      {/* AI Input & Actions */}
+      {list.items.length > 0 && (
         <div className="fixed bottom-[111px] left-0 right-0 bg-white border-t border-[#F5F5F5] p-4 max-w-[3000px] mx-auto">
           <div className="mb-3">
             <div className="flex items-center gap-3 bg-[#F0F5F1] rounded-2xl px-4 py-3 border border-[#E0E8E2]">

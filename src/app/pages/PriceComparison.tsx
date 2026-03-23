@@ -117,66 +117,149 @@ export default function PriceComparison() {
           This list is empty, so there is nothing to compare yet.
         </div>
       ) : (
-        <div className="px-6 pt-5">
-          <div className="overflow-x-auto rounded-[28px] border border-[#EEEEEE] bg-white">
-            <div className="min-w-[560px]">
-              <div className="grid grid-cols-4 border-b border-gray-200 px-4 py-3 text-xs font-semibold text-gray-500">
-                <div>Item</div>
-                {comparisonData.stores.map((store) => (
-                  <div key={store.key} className="text-center">
-                    {store.name}
-                  </div>
-                ))}
-              </div>
+        <div className="px-6 pt-5 space-y-5">
+          <section>
+            <div className="mb-3">
+              <h2 className="text-[16px] font-bold text-[#1A1A1A]">
+                Store totals
+              </h2>
+              <p className="text-[12px] text-[#888888]">
+                Best full-cart total is highlighted below.
+              </p>
+            </div>
 
-              <div className="divide-y divide-gray-100">
-                {comparisonData.items.map((item) => (
-                  <div key={item.id} className="grid grid-cols-4 px-4 py-3 text-sm">
-                    <div>
-                      <div className="font-semibold text-[#1A1A1A]">
-                        {item.name}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {item.quantityLabel}
-                      </div>
-                    </div>
-                    {comparisonData.stores.map((store) => {
-                      const isBest = item.bestStoreKey === store.key;
-                      return (
-                        <div
-                          key={store.key}
-                          className={`mx-1 flex items-center justify-center rounded-xl px-2 py-2 font-medium ${
-                            isBest
-                              ? "bg-green-100 text-green-800"
-                              : "text-[#1A1A1A]"
-                          }`}
-                        >
-                          {formatCurrency(item.prices[store.key])}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-4 border-t border-gray-200 px-4 py-3 text-sm font-bold">
-                <div>Total</div>
+            <div className="-mx-6 px-6 overflow-x-auto">
+              <div className="flex gap-3 min-w-max pb-1">
                 {comparisonData.stores.map((store) => {
                   const isBest = comparisonData.cheapestTotalStoreKey === store.key;
+
                   return (
                     <div
                       key={store.key}
-                      className={`mx-1 rounded-xl px-2 py-2 text-center ${
-                        isBest ? "bg-green-100 text-green-800" : "text-[#1A1A1A]"
+                      className={`min-w-[164px] rounded-[24px] border p-4 ${
+                        isBest
+                          ? "border-[#B7D7C2] bg-[#F3FAF5]"
+                          : "border-[#EEEEEE] bg-white"
                       }`}
                     >
-                      {formatCurrency(comparisonData.totals[store.key])}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: store.color }}
+                          />
+                          <p className="text-[14px] font-semibold text-[#1A1A1A]">
+                            {store.name}
+                          </p>
+                        </div>
+                        {isBest && (
+                          <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#2D6A4F] border border-[#DCE7DE]">
+                            Best total
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-4 text-[22px] font-bold text-[#1A1A1A]">
+                        {formatCurrency(comparisonData.totals[store.key])}
+                      </p>
+                      <p className="mt-1 text-[12px] text-[#888888]">
+                        {isBest
+                          ? "Lowest price for the whole list"
+                          : "Alternative full-cart price"}
+                      </p>
                     </div>
                   );
                 })}
               </div>
             </div>
-          </div>
+          </section>
+
+          <section>
+            <div className="mb-3">
+              <h2 className="text-[16px] font-bold text-[#1A1A1A]">
+                Item-by-item breakdown
+              </h2>
+              <p className="text-[12px] text-[#888888]">
+                Each card shows the cheapest store first for quick mobile
+                scanning.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {comparisonData.items.map((item) => {
+                const orderedStores = [...comparisonData.stores].sort(
+                  (firstStore, secondStore) =>
+                    item.prices[firstStore.key] - item.prices[secondStore.key]
+                );
+
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-[26px] border border-[#EEEEEE] bg-white p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[15px] font-bold text-[#1A1A1A]">
+                          {item.name}
+                        </p>
+                        <p className="mt-1 text-[12px] text-[#888888]">
+                          {item.quantityLabel}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-[#F5FAF6] px-3 py-1.5 text-[11px] font-semibold text-[#2D6A4F] border border-[#DCE7DE]">
+                        {item.category}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      {orderedStores.map((store) => {
+                        const isBest = item.bestStoreKey === store.key;
+
+                        return (
+                          <div
+                            key={store.key}
+                            className={`rounded-2xl border px-3 py-3 ${
+                              isBest
+                                ? "border-[#B7D7C2] bg-[#F3FAF5]"
+                                : "border-[#EEEEEE] bg-[#FCFCFC]"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-2.5 h-2.5 rounded-full"
+                                  style={{ backgroundColor: store.color }}
+                                />
+                                <div>
+                                  <p className="text-[14px] font-semibold text-[#1A1A1A]">
+                                    {store.name}
+                                  </p>
+                                  <p className="text-[11px] text-[#888888]">
+                                    {isBest
+                                      ? "Best price for this item"
+                                      : "Available at this store"}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[15px] font-bold text-[#1A1A1A]">
+                                  {formatCurrency(item.prices[store.key])}
+                                </p>
+                                {isBest && (
+                                  <p className="text-[11px] font-semibold text-[#2D6A4F]">
+                                    Save most here
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         </div>
       )}
 

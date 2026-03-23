@@ -188,6 +188,14 @@ export const initialLists: ShoppingList[] = [
 
 let lists = [...initialLists];
 
+function getModifiedDateLabel(): string {
+  return new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export function getLists(): ShoppingList[] {
   return lists;
 }
@@ -197,14 +205,13 @@ export function getListById(id: string): ShoppingList | undefined {
 }
 
 export function addList(list: ShoppingList): void {
-  lists.push(list);
+  lists = [...lists, list];
 }
 
 export function updateList(id: string, updates: Partial<ShoppingList>): void {
-  const index = lists.findIndex((list) => list.id === id);
-  if (index !== -1) {
-    lists[index] = { ...lists[index], ...updates };
-  }
+  lists = lists.map((list) =>
+    list.id === id ? { ...list, ...updates } : list
+  );
 }
 
 export function deleteList(id: string): void {
@@ -212,15 +219,15 @@ export function deleteList(id: string): void {
 }
 
 export function addItemToList(listId: string, item: ListItem): void {
-  const list = lists.find((l) => l.id === listId);
-  if (list) {
-    list.items.push(item);
-    list.modifiedDate = new Date().toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
+  lists = lists.map((list) =>
+    list.id === listId
+      ? {
+          ...list,
+          items: [...list.items, item],
+          modifiedDate: getModifiedDateLabel(),
+        }
+      : list
+  );
 }
 
 export function updateItemInList(
@@ -228,28 +235,36 @@ export function updateItemInList(
   itemId: string,
   updates: Partial<ListItem>
 ): void {
-  const list = lists.find((l) => l.id === listId);
-  if (list) {
-    const itemIndex = list.items.findIndex((item) => item.id === itemId);
-    if (itemIndex !== -1) {
-      list.items[itemIndex] = { ...list.items[itemIndex], ...updates };
-      list.modifiedDate = new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
+  lists = lists.map((list) => {
+    if (list.id !== listId) {
+      return list;
     }
-  }
+
+    const hasItem = list.items.some((item) => item.id === itemId);
+    if (!hasItem) {
+      return list;
+    }
+
+    return {
+      ...list,
+      items: list.items.map((item) =>
+        item.id === itemId ? { ...item, ...updates } : item
+      ),
+      modifiedDate: getModifiedDateLabel(),
+    };
+  });
 }
 
 export function deleteItemFromList(listId: string, itemId: string): void {
-  const list = lists.find((l) => l.id === listId);
-  if (list) {
-    list.items = list.items.filter((item) => item.id !== itemId);
-    list.modifiedDate = new Date().toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
+  lists = lists.map((list) => {
+    if (list.id !== listId) {
+      return list;
+    }
+
+    return {
+      ...list,
+      items: list.items.filter((item) => item.id !== itemId),
+      modifiedDate: getModifiedDateLabel(),
+    };
+  });
 }
