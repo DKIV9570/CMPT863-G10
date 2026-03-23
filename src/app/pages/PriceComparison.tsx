@@ -10,9 +10,32 @@ import {
 export default function PriceComparison() {
   const navigate = useNavigate();
   const location = useLocation();
-  const comparisonData = resolveComparisonData(
-    location.state as PricingRouteState | undefined
-  );
+  const routeState = location.state as PricingRouteState | undefined;
+  const comparisonData = resolveComparisonData(routeState);
+
+  const handleChooseForMe = () => {
+    if (!comparisonData) return;
+
+    navigate("/checkout", {
+      state: {
+        listId: comparisonData.listId,
+        items: routeState?.items,
+        plan: comparisonData.assistantPlan,
+      },
+    });
+  };
+
+  const handleManualCheckout = () => {
+    if (!comparisonData) return;
+
+    navigate("/checkout", {
+      state: {
+        listId: comparisonData.listId,
+        items: routeState?.items,
+        plan: comparisonData.singleStorePlan,
+      },
+    });
+  };
 
   if (!comparisonData) {
     return (
@@ -159,27 +182,13 @@ export default function PriceComparison() {
 
       <div className="px-6 mt-6 space-y-3">
         <button
-          onClick={() =>
-            navigate("/checkout", {
-              state: {
-                listId: comparisonData.listId,
-                plan: comparisonData.assistantPlan,
-              },
-            })
-          }
+          onClick={handleChooseForMe}
           className="w-full py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 transition-colors"
         >
           ✨ Choose For Me — Best Value
         </button>
         <button
-          onClick={() =>
-            navigate("/checkout", {
-              state: {
-                listId: comparisonData.listId,
-                plan: comparisonData.singleStorePlan,
-              },
-            })
-          }
+          onClick={handleManualCheckout}
           className="w-full py-3 border border-gray-300 rounded-xl font-bold hover:bg-gray-50 transition-colors"
         >
           Manual Checkout — One Store
