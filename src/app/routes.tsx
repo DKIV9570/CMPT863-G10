@@ -7,6 +7,7 @@ import NotFound from "./pages/NotFound";
 import AddItem from "./pages/AddItem";
 import PriceComparison from "./pages/PriceComparison";
 import Checkout from "./pages/Checkout";
+import AIRules from "./pages/AIRules";
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ export const router = createBrowserRouter([
   {
     path: "/settings",
     Component: Settings,
+  },
+  {
+    path: "/settings/ai-rules",
+    Component: AIRules,
   },
   {
     path: "*",
