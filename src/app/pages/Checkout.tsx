@@ -1,41 +1,43 @@
 import { ArrowLeft, Sparkles } from "lucide-react";
+import { useLocation, useNavigate } from "react-router";
 import BottomNav from "../components/BottomNav";
-import { useNavigate } from "react-router";
-
-type Store = {
-  name: string;
-  color: string;
-  total: number;
-  items: string[];
-};
+import {
+  CheckoutPlan,
+  formatCurrency,
+  PricingRouteState,
+  resolveComparisonData,
+} from "../utils/pricing";
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const stores: Store[] = [
-    {
-      name: "Superstore",
-      color: "#FF6D00",
-      total: 23.85,
-      items: ["Milk 2%", "Cheese Slices", "Chicken Breast", "Spinach", "Bananas"],
-    },
-    {
-      name: "Walmart",
-      color: "#1E4DB7",
-      total: 26.71,
-      items: ["Ground Beef", "Greek Yogurt", "Bread"],
-    },
-    {
-      name: "Safeway",
-      color: "#D32F2F",
-      total: 2.79,
-      items: ["Avocados"],
-    },
-  ];
+  const location = useLocation();
+  const routeState = location.state as PricingRouteState | undefined;
+  const comparisonData = resolveComparisonData(routeState);
+  const selectedPlan: CheckoutPlan | undefined =
+    routeState?.plan ?? comparisonData?.assistantPlan;
+
+  if (!comparisonData || !selectedPlan) {
+    return (
+      <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
+        <div className="px-6 pt-20">
+          <h1 className="text-[26px] font-bold text-[#1A1A1A]">Checkout</h1>
+          <p className="mt-3 text-[14px] text-[#666666]">
+            We could not prepare a checkout plan from the current flow.
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="mt-6 rounded-2xl bg-[#2D6A4F] px-4 py-3 text-[14px] font-bold text-white"
+          >
+            Back to Lists
+          </button>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
-        
-      {/* Status Bar */}
+    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
       <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
         <span>9:41</span>
         <div className="flex items-center gap-2">
@@ -51,39 +53,51 @@ export default function Checkout() {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="px-6 pt-4 pb-2 flex items-center gap-3"
-        onClick={() => navigate(-1)} // goes back to previous page>
-      >
-        <ArrowLeft className="w-5 h-5 text-[#1A1A1A]" />
-        <h1 className="text-[18px] font-semibold text-[#1A1A1A]">
-          Checkout
-        </h1>
+      <div className="px-6 pt-4 pb-2 flex items-center gap-3">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-[#1A1A1A]" />
+        </button>
+        <div>
+          <h1 className="text-[18px] font-semibold text-[#1A1A1A]">
+            Checkout
+          </h1>
+          <p className="text-[12px] text-[#888888]">{comparisonData.listName}</p>
+        </div>
       </div>
 
-      {/* AI Banner */}
       <div className="px-6 pt-3">
         <div className="bg-[#E8F0EA] border border-[#C8DCCB] rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4 text-[#2D6A4F]" />
             <p className="text-[13px] font-semibold text-[#2D6A4F]">
-              AI Optimized Selection
+              {selectedPlan.title}
             </p>
           </div>
-          <p className="text-[12px] text-[#4A4A4A]">
-            We've selected the cheapest combination across stores, saving you ~$8.47
-          </p>
+          <p className="text-[12px] text-[#4A4A4A]">{selectedPlan.summary}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold text-[#1A1A1A] border border-[#DCE7DE]">
+              {selectedPlan.stores.length} store
+              {selectedPlan.stores.length === 1 ? "" : "s"}
+            </span>
+            <span className="rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold text-[#1A1A1A] border border-[#DCE7DE]">
+              {comparisonData.items.length} items
+            </span>
+            <span className="rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold text-[#1A1A1A] border border-[#DCE7DE]">
+              Total {formatCurrency(selectedPlan.total)}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Store Cards */}
       <div className="px-6 pt-4 space-y-4">
-        {stores.map((store) => (
+        {selectedPlan.stores.map((store) => (
           <div
-            key={store.name}
+            key={store.key}
             className="bg-[#FAFAFA] border border-[#EEEEEE] rounded-2xl p-4"
           >
-            {/* Header */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div
@@ -95,28 +109,20 @@ export default function Checkout() {
                 </p>
               </div>
               <p className="text-[14px] font-semibold text-[#2D6A4F]">
-                ${store.total.toFixed(2)}
+                {formatCurrency(store.total)}
               </p>
             </div>
 
-            {/* Items */}
             <ul className="text-[12px] text-[#777777] space-y-1 pl-4 list-disc mb-3">
-              {store.items.map((item, i) => (
-                <li key={i}>{item}</li>
+              {store.items.map((item) => (
+                <li key={item.id}>
+                  {item.name} · {item.quantityLabel} · {formatCurrency(item.price)}
+                </li>
               ))}
             </ul>
 
-            {/* Button */}
             <button
-                onClick={() => {
-                if (store.name === "Walmart") {
-                    window.open("https://www.walmart.ca/en", "_blank");
-                } else if (store.name === "Superstore") {
-                    window.open("https://www.realcanadiansuperstore.ca/", "_blank");
-                } else if (store.name === "Safeway") {
-                    window.open("https://www.safeway.ca/", "_blank");
-                }
-            }}
+              onClick={() => window.open(store.url, "_blank")}
               className="w-full py-3 rounded-xl text-[12px] font-semibold border transition-colors"
               style={{
                 borderColor: store.color,
@@ -127,6 +133,22 @@ export default function Checkout() {
             </button>
           </div>
         ))}
+      </div>
+
+      <div className="px-6 pt-4">
+        <div className="rounded-2xl border border-[#EEEEEE] bg-white px-4 py-4 flex items-center justify-between">
+          <div>
+            <p className="text-[12px] text-[#888888]">Grand Total</p>
+            <p className="text-[20px] font-bold text-[#1A1A1A]">
+              {formatCurrency(selectedPlan.total)}
+            </p>
+          </div>
+          {selectedPlan.savings > 0 && (
+            <div className="rounded-full bg-[#F0F5F1] px-3 py-2 text-[12px] font-semibold text-[#2D6A4F]">
+              Save {formatCurrency(selectedPlan.savings)}
+            </div>
+          )}
+        </div>
       </div>
 
       <BottomNav />

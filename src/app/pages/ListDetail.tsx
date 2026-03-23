@@ -349,12 +349,26 @@ export default function ListDetail() {
           </div>
           <div className="flex gap-3">
             <button className="flex-1 py-3 px-4 border-2 border-[#2D6A4F] rounded-2xl text-[#2D6A4F] font-bold hover:bg-[#F0F5F1] transition-colors"
-              onClick={() => navigate("/price-comparison", { state: { items: groceryItems } })}
+              onClick={() =>
+                navigate("/price-comparison", {
+                  state: {
+                    listId,
+                    items: isWeeklyGroceries ? groceryItems : list.items,
+                  },
+                })
+              }
               >
               Compare Prices
             </button>
             <button className="flex-1 py-3 px-4 bg-[#2D6A4F] rounded-2xl text-white font-bold hover:bg-[#255940] transition-colors"
-              onClick={() => navigate("/checkout", { state: { items: groceryItems } })}
+              onClick={() =>
+                navigate("/checkout", {
+                  state: {
+                    listId,
+                    items: isWeeklyGroceries ? groceryItems : list.items,
+                  },
+                })
+              }
             >
               Checkout
             </button>
