@@ -1,6 +1,8 @@
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 import BottomNav from "../components/BottomNav";
+import FeedbackBanner from "../components/FeedbackBanner";
+import { useTransientFeedback } from "../hooks/useTransientFeedback";
 import {
   CheckoutPlan,
   formatCurrency,
@@ -13,12 +15,15 @@ export default function Checkout() {
   const location = useLocation();
   const routeState = location.state as PricingRouteState | undefined;
   const comparisonData = resolveComparisonData(routeState);
+  const { activeFeedback, dismissFeedback } = useTransientFeedback(
+    routeState?.feedback
+  );
   const selectedPlan: CheckoutPlan | undefined =
     routeState?.plan ?? comparisonData?.assistantPlan;
 
   if (!comparisonData || !selectedPlan) {
     return (
-      <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
+      <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
         <div className="px-6 pt-20">
           <h1 className="text-[26px] font-bold text-[#1A1A1A]">Checkout</h1>
           <p className="mt-3 text-[14px] text-[#666666]">
@@ -37,7 +42,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
+    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
       <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
         <span>9:41</span>
         <div className="flex items-center gap-2">
@@ -91,6 +96,13 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {activeFeedback && (
+        <FeedbackBanner
+          feedback={activeFeedback}
+          onDismiss={dismissFeedback}
+        />
+      )}
 
       <div className="px-6 pt-4 space-y-4">
         {selectedPlan.stores.map((store) => (

@@ -1,4 +1,5 @@
 import { getListById, ListItem } from "../store/listsStore";
+import type { ActionFeedback } from "../types/feedback";
 
 export type StoreKey = "walmart" | "superstore" | "safeway";
 
@@ -63,6 +64,7 @@ export type PricingRouteState = {
   listId?: string;
   items?: ListItem[];
   plan?: CheckoutPlan;
+  feedback?: ActionFeedback;
 };
 
 type CatalogOffer = {

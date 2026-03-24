@@ -26,7 +26,7 @@ export default function Receipt() {
 };
 
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
+    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
       {/* Hidden Input */}
       <input
         type="file"

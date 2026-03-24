@@ -136,7 +136,15 @@ export default function AddItemPage() {
     };
 
     addItemToList(listId, newItem);
-    navigate(`/list/${listId}`);
+    navigate(`/list/${listId}`, {
+      state: {
+        feedback: {
+          title: "Added to list",
+          message: `${itemName} was added to ${list.name}.`,
+          tone: "success",
+        },
+      },
+    });
   };
 
   return (
