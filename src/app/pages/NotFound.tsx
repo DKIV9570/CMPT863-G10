@@ -12,7 +12,7 @@ export default function NotFound() {
           Page Not Found
         </h2>
         <p className="text-[#999999] mb-8">
-          The page you're looking for doesn't exist. It is under developement and will be available soon.
+          The page you're looking for doesn't exist. It is under developement in the prototype and will be available soon.
         </p>
         <button
           onClick={() => navigate("/")}

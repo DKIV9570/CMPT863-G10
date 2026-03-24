@@ -118,7 +118,7 @@ export default function ListDetail() {
   );
 
   return (
-    <div className="bg-white min-h-screen pb-[260px] max-w-[608px] mx-auto">
+    <div className="bg-white min-h-screen pb-[260px] max-w-[3000px] mx-auto">
       {/* Header */}
       <div className="sticky top-0 bg-white z-10">
         <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
@@ -151,7 +151,8 @@ export default function ListDetail() {
               {completedCount}/{totalItems} items checked · Modified {list.modifiedDate}
             </p>
           </div>
-          <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors">
+          <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+            onClick={() => navigate("*")} >
             <Share2 className="w-6 h-6 text-[#1A1A1A]" />
           </button>
         </div>
@@ -325,7 +326,7 @@ export default function ListDetail() {
 
       {/* AI Input & Actions */}
       {list.items.length > 0 && (
-        <div className="fixed bottom-[111px] left-0 right-0 bg-white border-t border-[#F5F5F5] p-4 max-w-[608px] mx-auto">
+        <div className="fixed bottom-[111px] left-0 right-0 bg-white border-t border-[#F5F5F5] p-4 max-w-[3000px] mx-auto">
           <div className="mb-3">
             <div className="flex items-center gap-3 bg-[#F0F5F1] rounded-2xl px-4 py-3 border border-[#E0E8E2]">
               <Sparkles className="w-5 h-5 text-[#2D6A4F] opacity-50" />

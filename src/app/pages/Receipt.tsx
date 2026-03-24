@@ -26,7 +26,7 @@ export default function Receipt() {
 };
 
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
+    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
       {/* Hidden Input */}
       <input
         type="file"
@@ -114,10 +114,18 @@ export default function Receipt() {
 
       {/* Preview Image for upload */}
       {preview && (
-        <p className="mt-3 text-center text-green-600 font-medium">
-          ✓ Receipt uploaded successfully
-        </p>
-      )}
+        <div className="mt-3 text-center text-green-600 font-medium">
+        <p>✓ Receipt uploaded successfully</p>
+
+        <div className="flex justify-center mt-3">
+        <button className="bg-[#2D6A4F] text-white py-4 px-6 rounded-2xl font-semibold flex items-center justify-center gap-2"
+          onClick={() => navigate("*")}
+        >
+        Next
+        </button>
+    </div>
+  </div>
+)}
 
       <BottomNav />
     </div>

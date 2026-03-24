@@ -33,7 +33,7 @@ export default function Home() {
   );
 
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
+    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
       {/* Status Bar */}
       <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
         <span>9:41</span>
@@ -60,7 +60,8 @@ export default function Home() {
               Welcome, Vivek
             </h1>
           </div>
-          <button className="w-16 h-16 bg-[#F0F5F1] rounded-full flex items-center justify-center hover:bg-[#E0E8E2] transition-colors">
+          <button className="w-16 h-16 bg-[#F0F5F1] rounded-full flex items-center justify-center hover:bg-[#E0E8E2] transition-colors"
+             onClick={() => navigate("*")} >
             <Share2 className="w-7 h-7 text-[#2D6A4F]" />
           </button>
         </div>
@@ -76,7 +77,8 @@ export default function Home() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent text-[14px] text-[#1A1A1A] placeholder:text-[#999999] outline-none"
             />
-            <button className="w-12 h-12 bg-[#2D6A4F] rounded-xl flex items-center justify-center hover:bg-[#255940] transition-colors">
+            <button className="w-12 h-12 bg-[#2D6A4F] rounded-xl flex items-center justify-center hover:bg-[#255940] transition-colors"
+               onClick={() => navigate("*")} >
               <Send className="w-5 h-5 text-white" />
             </button>
           </div>

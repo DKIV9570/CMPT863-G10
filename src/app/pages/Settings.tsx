@@ -25,36 +25,36 @@ export default function Settings() {
       icon: User,
       label: "Account",
       description: "Manage your profile",
-      action: () => {},
+      action: () => navigate("*"),
     },
     {
       icon: Bell,
       label: "Notifications",
       description: "Manage notifications",
-      action: () => {},
+      action: () => navigate("*"),
     },
     {
       icon: Lock,
       label: "Privacy",
       description: "Privacy settings",
-      action: () => {},
+      action: () => navigate("*"),
     },
     {
       icon: HelpCircle,
       label: "Help & Support",
       description: "Get help",
-      action: () => {},
+      action: () => navigate("*"),
     },
     {
       icon: Info,
       label: "About",
       description: "App information",
-      action: () => {},
+      action: () => navigate("*"),
     },
   ];
 
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
+    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
       <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
         <span>9:41</span>
         <div className="flex items-center gap-2">
