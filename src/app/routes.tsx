@@ -8,6 +8,7 @@ import AddItem from "./pages/AddItem";
 import PriceComparison from "./pages/PriceComparison";
 import Checkout from "./pages/Checkout";
 import AIRules from "./pages/AIRules";
+import AILoadingPage from "./pages/AILoadingPage";
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +50,10 @@ export const router = createBrowserRouter([
   {
     path: "/checkout",
     Component: Checkout,
+  },
+  {
+    path: "/ai-loading",
+    Component: AILoadingPage,
   }
 
 ]);

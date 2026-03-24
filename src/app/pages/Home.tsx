@@ -4,11 +4,13 @@ import BottomNav from "../components/BottomNav";
 import ListCard from "../components/ListCard";
 import NewListDialog from "../components/NewListDialog";
 import { getLists, addList, ShoppingList } from "../store/listsStore";
+import { useNavigate } from "react-router";
 
 export default function Home() {
   const [lists, setLists] = useState(getLists());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const handleCreateList = (name: string, color: string) => {
     const newList: ShoppingList = {
@@ -82,11 +84,16 @@ export default function Home() {
 
         {/* Quick Actions */}
         <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
-          <button className="px-5 py-3 bg-[#E8F0EA] border border-[#C8DCCB] rounded-full text-[11px] text-[#2D6A4F] whitespace-nowrap hover:bg-[#D8E4DA] transition-colors">
+          <button 
+            className="px-5 py-3 bg-[#E8F0EA] border border-[#C8DCCB] rounded-full text-[11px] text-[#2D6A4F] whitespace-nowrap hover:bg-[#D8E4DA] transition-colors"
+            onClick={() => navigate("/ai-loading", { state: { prompt: "Build a weekly list for 2" } })}
+          >
             Build a weekly list for 2
           </button>
-          <button className="px-5 py-3 bg-[#E8F0EA] border border-[#C8DCCB] rounded-full text-[11px] text-[#2D6A4F] whitespace-nowrap hover:bg-[#D8E4DA] transition-colors">
-            Add essentials I'm low on
+          <button className="px-5 py-3 bg-[#E8F0EA] border border-[#C8DCCB] rounded-full text-[11px] text-[#2D6A4F] whitespace-nowrap hover:bg-[#D8E4DA] transition-colors"
+            onClick={() => navigate("/ai-loading", { state: { prompt: "Create a quick breakfast list" } })}
+          >
+            Create a quick breakfast list
           </button>
         </div>
       </div>
