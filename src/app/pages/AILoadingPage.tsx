@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import BottomNav from "../components/BottomNav";
 import { useLocation, useNavigate } from "react-router";
 
@@ -45,7 +45,7 @@ This is the prompt the user gives: ${prompt}
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer YOUR_KEY_HERE`,
+            Authorization: `Bearer OPENAI_API_KEY`, // Replace with your actual API key
           },
           body: JSON.stringify({
             model: "gpt-4o-mini",
@@ -71,7 +71,7 @@ This is the prompt the user gives: ${prompt}
   }, [PROMPT]);
 
   return (
-    <div className="bg-white min-h-screen pb-[260px] max-w-[3000px] mx-auto">
+    <div className="bg-white min-h-screen pb-[700px] max-w-[3000px] mx-auto">
       {/* Header / Status Bar */}
       <div className="sticky top-0 bg-white z-10 border-b border-[#F5F5F5]">
         <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
@@ -102,9 +102,9 @@ This is the prompt the user gives: ${prompt}
 
       {/* AI Text */}
       {aiText && (
-        <div className="px-6 py-4 bg-[#F0F5F1] rounded-xl mt-4">
+        <div className="px-6 py-4 bg-[#F0F5F1] rounded-xl mt-4 h-[50vh] overflow-y-auto">
           <h2 className="text-sm font-bold mb-2">Suggested Items / Tips:</h2>
-          <p className="text-[12px] text-[#1A1A1A] whitespace-pre-line">{aiText}</p>
+          <p className="text-[25px] text-[#1A1A1A] whitespace-pre-line">{aiText}</p>
         </div>
       )}
 
