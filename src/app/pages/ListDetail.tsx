@@ -47,8 +47,7 @@ export default function ListDetail() {
   }, [list, navigate]);
 
   if (!list) return null;
-
-  const isWeeklyGroceries = list.id === "1";
+  const isWeeklyGroceries = listId;
   const groceryItems = isWeeklyGroceries
     ? list.items.map(normalizeGroceryItem)
     : [];

@@ -4,7 +4,7 @@ import BottomNav from "../components/BottomNav";
 import ListCard from "../components/ListCard";
 import NewListDialog from "../components/NewListDialog";
 import { getLists, addList, ShoppingList } from "../store/listsStore";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 export default function Home() {
   const [lists, setLists] = useState(getLists());
@@ -31,7 +31,7 @@ export default function Home() {
   const filteredLists = lists.filter((list) =>
     list.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  
   return (
     <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
       {/* Status Bar */}

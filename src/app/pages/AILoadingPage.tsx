@@ -1,25 +1,41 @@
 import React, { useEffect, useState } from "react";
 import BottomNav from "../components/BottomNav";
 import { useLocation, useNavigate } from "react-router";
+import { getLists, addList, ShoppingList } from "../store/listsStore";
 
 export default function LoadingPage() {
+  type GroceryItem = {
+    category: string;
+    item: string;
+    quantity: number;
+    unit: string;
+  };
   const location = useLocation();
   const prompt = location.state?.prompt;
   const navigate = useNavigate();
 
   const [progress, setProgress] = useState(0);
   const [aiText, setAiText] = useState<string>("");
+  const [lists, setLists] = useState(getLists());
 
   const PROMPT = `
-You are a helpful assistant that suggests grocery items based on a user's meal plan.
-Generate a personalized grocery list - including breakfast, lunch, and dinner. Items ONLY.
-Include a variety of items across different food groups.
-Please describe the suggested items in bullet point format that is easy to read and understand.
-Only provide the list of items and how many they should purchase, without any additional commentary or explanations.
-Please give specific items and quantities, such as '2 lbs of chicken breast' or '1 dozen eggs'.
-Label each item with its category (e.g., Produce, Dairy, Meat, Pantry) for easy organization. 
-Please only suggest items that fall into these categories and label them as such.
-This is the prompt the user gives: ${prompt}
+  You are a helpful assistant that suggests grocery items based on a user's meal plan.
+  Generate a personalized grocery list - including breakfast, lunch, and dinner. Items ONLY.
+  Include a variety of items across different food groups.
+  Please describe the suggested items in bullet point format that is easy to read and understand.
+  Only provide the list of items and how many they should purchase, without any additional commentary or explanations.
+  Please give specific items and quantities, such as '2 lbs of chicken breast' or '1 dozen eggs'.
+  Label each item with its category (e.g., Produce, Dairy, Meat, Pantry) for easy organization. 
+  Please only suggest items that fall into these categories and label them as such.
+  This is the prompt the user gives: ${prompt}
+  Format the list as follows in a JSON array of objects, where each object has the following structure and do not include any markdowns:
+    {
+      category: string; (e.g., 'Produce', 'Dairy', 'Meat', 'Pantry')
+      item: string; (e.g., 'Chicken Breast', 'Eggs', 'Milk', 'Bread', etc.)
+      quantity: number; (e.g., 2, 1, 3, etc.)
+      unit: string; (e.g., 'lbs', 'dozen', 'cups', etc.)
+    };
+  Limit the amount of items to 10.
   `;
   
 
@@ -29,9 +45,9 @@ This is the prompt the user gives: ${prompt}
 
     const tick = () => {
       if (isCancelled) return;
-        currentProgress += Math.random() * 5 + 2;
+        currentProgress += Math.random() * 1 + 2;
       if (currentProgress > 99) currentProgress = 99;
-        setProgress(currentProgress);
+        setProgress(currentProgress)
       if (!isCancelled) setTimeout(tick, 200);
     };
 
@@ -57,6 +73,7 @@ This is the prompt the user gives: ${prompt}
         const data = await response.json();
         const message = data.choices?.[0]?.message?.content || "No response from AI";
         setAiText(message);
+        
       } catch (err) {
         console.error("AI fetch error:", err);
         setAiText("Failed to generate AI content.");
@@ -101,12 +118,32 @@ This is the prompt the user gives: ${prompt}
       </div>
 
       {/* AI Text */}
-      {aiText && (
-        <div className="px-6 py-4 bg-[#F0F5F1] rounded-xl mt-4 h-[50vh] overflow-y-auto">
-          <h2 className="text-sm font-bold mb-2">Suggested Items / Tips:</h2>
-          <p className="text-[25px] text-[#1A1A1A] whitespace-pre-line">{aiText}</p>
-        </div>
-      )}
+        {aiText && (
+          <div className="px-6 py-4 bg-[#F0F5F1] rounded-xl mt-4 h-[50vh] overflow-y-auto">
+            <h2 className="text-sm font-bold mb-2">Suggested Items:</h2>
+
+            {(() => {
+              let parsedItems: GroceryItem[] = [];
+              try {
+                parsedItems = JSON.parse(aiText);
+              } catch (e) {
+                // fallback to raw text if parsing fails
+                return <p className="text-[28px] text-[#1A1A1A]">{aiText}</p>;
+              }
+
+              return (
+                <div className="space-y-2">
+                  {parsedItems.map((item, index) => (
+                    <div key={index} className="flex justify-between text-[25px] text-[#1A1A1A] font-semibold">
+                      <span>{item.item} ({item.category})</span>
+                      <span>{item.quantity} {item.unit}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
       {/* Progress Bar */}
       {progress <= 95 && (
@@ -131,7 +168,33 @@ This is the prompt the user gives: ${prompt}
         </button>
         <button
           className="flex-1 py-3 px-4 bg-[#2D6A4F] rounded-2xl text-white font-bold hover:bg-[#255940] transition-colors"
-          onClick={() => navigate("*")} 
+          onClick={() => {
+            const parsedItems: GroceryItem[] = JSON.parse(aiText);
+            // Map AI items to your ShoppingList item format
+            const mappedItems = parsedItems.map((item, index) => ({
+              id: (index + 1).toString(), // unique id for each item
+              text: item.item,
+              completed: false,
+              category: item.category,
+              quantity: item.quantity,
+              unit: item.unit,
+            }));
+
+            const newList: ShoppingList = {
+              id: Date.now().toString(),
+              name: "AI-Generated List",
+              color: "green",
+              items: mappedItems,
+              modifiedDate: new Date().toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }),
+            };
+            addList(newList);
+            setLists(getLists());
+            navigate("/")}
+          }
         >
           Create list
         </button>
