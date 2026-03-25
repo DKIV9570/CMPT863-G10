@@ -100,7 +100,10 @@ export default function Receipt() {
 
       {/* Actions */}
       <div className="px-6 mt-6 flex gap-4">
-        <button className="flex-1 bg-[#2D6A4F] text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2">
+        <button 
+          className="flex-1 bg-[#2D6A4F] text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2"
+          onClick={() => navigate("*")}
+        >
           📷 Take Photo
         </button>
 
