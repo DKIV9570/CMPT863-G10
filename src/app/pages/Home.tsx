@@ -3,13 +3,21 @@ import { Sparkles, Send, Share2 } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import ListCard from "../components/ListCard";
 import NewListDialog from "../components/NewListDialog";
-import { getLists, addList, ShoppingList } from "../store/listsStore";
+import {
+  getLists,
+  addList,
+  deleteList,
+  moveList,
+  ShoppingList,
+} from "../store/listsStore";
 import { useNavigate } from "react-router";
 
 export default function Home() {
   const [lists, setLists] = useState(getLists());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [draggedListId, setDraggedListId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleCreateList = (name: string, color: string) => {
@@ -28,6 +36,48 @@ export default function Home() {
     setLists(getLists());
   };
 
+  const handleDeleteList = (listId: string) => {
+    deleteList(listId);
+    setLists(getLists());
+
+    if (draggedListId === listId) {
+      setDraggedListId(null);
+    }
+
+    if (dropTargetId === listId) {
+      setDropTargetId(null);
+    }
+  };
+
+  const handleDragStart = (listId: string) => {
+    setDraggedListId(listId);
+    setDropTargetId(listId);
+  };
+
+  const handleDragOver = (listId: string) => {
+    if (!draggedListId || draggedListId === listId || dropTargetId === listId) {
+      return;
+    }
+
+    setDropTargetId(listId);
+  };
+
+  const handleDrop = (listId: string) => {
+    if (!draggedListId) {
+      return;
+    }
+
+    moveList(draggedListId, listId);
+    setLists(getLists());
+    setDraggedListId(null);
+    setDropTargetId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedListId(null);
+    setDropTargetId(null);
+  };
+
   const handleSubmitPrompt = () => {
     const prompt = aiPrompt.trim();
     navigate("/ai-loading", {
@@ -38,7 +88,7 @@ export default function Home() {
   };
   
   return (
-    <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
+    <div className="bg-white min-h-screen pb-[111px] max-w-[608px] mx-auto">
       {/* Status Bar */}
       <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
         <span>9:41</span>
@@ -114,7 +164,12 @@ export default function Home() {
       {/* Lists Section */}
       <div className="px-6 pt-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[17px] font-bold text-[#1A1A1A]">Your Lists</h2>
+          <div>
+            <h2 className="text-[17px] font-bold text-[#1A1A1A]">Your Lists</h2>
+            <p className="text-[12px] text-[#999999] mt-1">
+              Drag cards to reorder them, or use the trash icon to remove a list.
+            </p>
+          </div>
           <button
             onClick={() => setIsDialogOpen(true)}
             className="px-6 py-3 bg-[#2D6A4F] rounded-xl text-white text-[12px] font-bold hover:bg-[#255940] transition-colors"
@@ -125,7 +180,19 @@ export default function Home() {
 
         <div className="space-y-3">
           {lists.length > 0 ? (
-            lists.map((list) => <ListCard key={list.id} list={list} />)
+            lists.map((list) => (
+              <ListCard
+                key={list.id}
+                list={list}
+                isDragging={draggedListId === list.id}
+                isDropTarget={dropTargetId === list.id && draggedListId !== list.id}
+                onDelete={handleDeleteList}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onDragEnd={handleDragEnd}
+              />
+            ))
           ) : (
             <div className="text-center py-12 text-[#999999]">
               No lists yet. Create your first one!

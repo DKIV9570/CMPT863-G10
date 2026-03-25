@@ -218,6 +218,24 @@ export function deleteList(id: string): void {
   lists = lists.filter((list) => list.id !== id);
 }
 
+export function moveList(draggedId: string, targetId: string): void {
+  if (draggedId === targetId) {
+    return;
+  }
+
+  const draggedIndex = lists.findIndex((list) => list.id === draggedId);
+  const targetIndex = lists.findIndex((list) => list.id === targetId);
+
+  if (draggedIndex === -1 || targetIndex === -1) {
+    return;
+  }
+
+  const nextLists = [...lists];
+  const [draggedList] = nextLists.splice(draggedIndex, 1);
+  nextLists.splice(targetIndex, 0, draggedList);
+  lists = nextLists;
+}
+
 export function addItemToList(listId: string, item: ListItem): void {
   lists = lists.map((list) =>
     list.id === listId
