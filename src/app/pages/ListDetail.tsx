@@ -761,7 +761,7 @@ export default function ListDetail() {
   };
 
   return (
-    <div className="bg-white min-h-screen pb-[320px] max-w-[608px] mx-auto">
+    <div className="bg-white min-h-screen pb-[320px] max-w-[3000px] mx-auto">
       <div className="sticky top-0 bg-white z-10">
         <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
           <span>9:41</span>
@@ -987,7 +987,7 @@ export default function ListDetail() {
         </div>
       )}
 
-      <div className="fixed bottom-[111px] left-0 right-0 bg-white border-t border-[#F5F5F5] p-4 max-w-[608px] mx-auto">
+      <div className="fixed bottom-[111px] left-0 right-0 bg-white border-t border-[#F5F5F5] p-4 max-w-[3000px] mx-auto">
         <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
           {QUICK_AI_ACTIONS.map((action) => (
             <button
