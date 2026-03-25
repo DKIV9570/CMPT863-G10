@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useParams, useNavigate } from "react-router";
-import { ArrowLeft, Share2, Sparkles, Send } from "lucide-react";
+import { ArrowLeft, Share2, Sparkles, Send, Trash2 } from "lucide-react";
 import {
   getListById,
   updateItemInList,
@@ -116,6 +116,17 @@ export default function ListDetail() {
     </div>
   );
 
+  const deleteButton = (itemId: string) => (
+    <button
+      onClick={() => handleDeleteItem(itemId)}
+      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border-2 border-[#CCCCCC] text-[#8A8A8A] transition-colors hover:border-[#D9534F] hover:text-[#D9534F]"
+      type="button"
+      aria-label="Delete item"
+    >
+      <Trash2 className="h-4 w-4" />
+    </button>
+  );
+
   return (
     <div className="bg-white min-h-screen pb-[260px] max-w-[3000px] mx-auto">
       {/* Header */}
@@ -185,9 +196,11 @@ export default function ListDetail() {
                     className="flex items-center gap-3 py-1"
                     style={{ opacity: item.completed ? 0.5 : 1 }}
                   >
+                    {deleteButton(item.id)}
                     <button
                       onClick={() => handleToggleItem(item.id)}
                       className="flex-shrink-0"
+                      type="button"
                     >
                       <div
                         className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center transition-all ${
@@ -276,9 +289,11 @@ export default function ListDetail() {
                   key={item.id}
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group"
                 >
+                  {deleteButton(item.id)}
                   <button
                     onClick={() => handleToggleItem(item.id)}
                     className="flex-shrink-0"
+                    type="button"
                   >
                     <div
                       className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${

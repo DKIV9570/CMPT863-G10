@@ -4,6 +4,8 @@ import BottomNav from "../components/BottomNav";
 import { useLocation, useNavigate } from "react-router";
 import { addList, ShoppingList } from "../store/listsStore";
 
+const OPENAI_API_KEY = (import.meta.env.VITE_OPENAI_API_KEY ?? "").trim();
+
 type GroceryItem = {
   category: string;
   item: string;
@@ -306,11 +308,22 @@ export default function LoadingPage() {
 
     (async () => {
       try {
+        if (!OPENAI_API_KEY) {
+          if (isCancelled) return;
+
+          setRawAiText(
+            "Missing Open API key. Add it to a local .env file and restart the dev server."
+          );
+          setReviewList(null);
+          setProgress(0);
+          return;
+        }
+
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer OPEN_API_KEY`,
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
             model: "gpt-4o-mini",
@@ -323,6 +336,13 @@ export default function LoadingPage() {
             max_tokens: 500,
           }),
         });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `OpenAI request failed (${response.status}): ${errorText || "Unknown error"}`
+          );
+        }
 
         const data = await response.json();
         const message = data.choices?.[0]?.message?.content || "No response from AI";
