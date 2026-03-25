@@ -4,12 +4,12 @@ import BottomNav from "../components/BottomNav";
 import ListCard from "../components/ListCard";
 import NewListDialog from "../components/NewListDialog";
 import { getLists, addList, ShoppingList } from "../store/listsStore";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 
 export default function Home() {
   const [lists, setLists] = useState(getLists());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
   const navigate = useNavigate();
 
   const handleCreateList = (name: string, color: string) => {
@@ -28,9 +28,14 @@ export default function Home() {
     setLists(getLists());
   };
 
-  const filteredLists = lists.filter((list) =>
-    list.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleSubmitPrompt = () => {
+    const prompt = aiPrompt.trim();
+    navigate("/ai-loading", {
+      state: {
+        prompt: prompt || "Build a weekly list for 2",
+      },
+    });
+  };
   
   return (
     <div className="bg-white min-h-screen pb-[111px] max-w-[3000px] mx-auto">
@@ -73,12 +78,18 @@ export default function Home() {
             <input
               type="text"
               placeholder="What would you like to do?"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSubmitPrompt();
+                }
+              }}
               className="flex-1 bg-transparent text-[14px] text-[#1A1A1A] placeholder:text-[#999999] outline-none"
             />
             <button className="w-12 h-12 bg-[#2D6A4F] rounded-xl flex items-center justify-center hover:bg-[#255940] transition-colors"
-               onClick={() => navigate("*")} >
+               onClick={handleSubmitPrompt} >
               <Send className="w-5 h-5 text-white" />
             </button>
           </div>
@@ -113,13 +124,11 @@ export default function Home() {
         </div>
 
         <div className="space-y-3">
-          {filteredLists.length > 0 ? (
-            filteredLists.map((list) => <ListCard key={list.id} list={list} />)
+          {lists.length > 0 ? (
+            lists.map((list) => <ListCard key={list.id} list={list} />)
           ) : (
             <div className="text-center py-12 text-[#999999]">
-              {searchQuery
-                ? "No lists match your search"
-                : "No lists yet. Create your first one!"}
+              No lists yet. Create your first one!
             </div>
           )}
         </div>
