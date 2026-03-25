@@ -1,4 +1,10 @@
-import { ShoppingCart, ChevronRight, GripVertical, Trash2 } from "lucide-react";
+import {
+  ShoppingCart,
+  ChevronRight,
+  GripVertical,
+  PencilLine,
+  Trash2,
+} from "lucide-react";
 import { useNavigate } from "react-router";
 import { ShoppingList } from "../store/listsStore";
 
@@ -7,6 +13,7 @@ interface ListCardProps {
   isDragging?: boolean;
   isDropTarget?: boolean;
   onDelete?: (listId: string) => void;
+  onRename?: (list: ShoppingList) => void;
   onDragStart?: (listId: string) => void;
   onDragOver?: (listId: string) => void;
   onDrop?: (listId: string) => void;
@@ -18,6 +25,7 @@ export default function ListCard({
   isDragging = false,
   isDropTarget = false,
   onDelete,
+  onRename,
   onDragStart,
   onDragOver,
   onDrop,
@@ -73,6 +81,17 @@ export default function ListCard({
         </button>
 
         <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onRename?.(list);
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E4E4E4] bg-white text-[#8A8A8A] transition-colors hover:border-[#2D6A4F] hover:text-[#2D6A4F]"
+            aria-label={`Rename ${list.name}`}
+          >
+            <PencilLine className="h-4 w-4" />
+          </button>
           <button
             type="button"
             onClick={(event) => {

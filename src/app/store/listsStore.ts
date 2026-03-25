@@ -214,6 +214,25 @@ export function updateList(id: string, updates: Partial<ShoppingList>): void {
   );
 }
 
+export function renameList(id: string, name: string): void {
+  const nextName = name.trim();
+  if (!nextName) {
+    return;
+  }
+
+  lists = lists.map((list) => {
+    if (list.id !== id || list.name === nextName) {
+      return list;
+    }
+
+    return {
+      ...list,
+      name: nextName,
+      modifiedDate: getModifiedDateLabel(),
+    };
+  });
+}
+
 export function deleteList(id: string): void {
   lists = lists.filter((list) => list.id !== id);
 }

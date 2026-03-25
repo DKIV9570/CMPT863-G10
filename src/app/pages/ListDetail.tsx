@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Check,
   LoaderCircle,
+  PencilLine,
   Send,
   Share2,
   Sparkles,
@@ -14,11 +15,13 @@ import {
   deleteItemFromList,
   getListById,
   ListItem,
+  renameList,
   updateItemInList,
   updateList,
 } from "../store/listsStore";
 import BottomNav from "../components/BottomNav";
 import FeedbackBanner from "../components/FeedbackBanner";
+import EditListTitleDialog from "../components/EditListTitleDialog";
 import { useTransientFeedback } from "../hooks/useTransientFeedback";
 import type { ActionFeedback } from "../types/feedback";
 import {
@@ -228,6 +231,7 @@ export default function ListDetail() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [undoState, setUndoState] = useState<UndoState | null>(null);
   const [highlightedItemIds, setHighlightedItemIds] = useState<string[]>([]);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const { activeFeedback, dismissFeedback } = useTransientFeedback(
     routeState?.feedback
   );
@@ -354,6 +358,16 @@ export default function ListDetail() {
 
     deleteItemFromList(listId, itemId);
     refreshList();
+  };
+
+  const handleRenameListTitle = (name: string) => {
+    if (!listId) {
+      return;
+    }
+
+    renameList(listId, name);
+    refreshList();
+    setIsRenameDialogOpen(false);
   };
 
   const handleUndoLastAiAction = () => {
@@ -786,9 +800,19 @@ export default function ListDetail() {
             <ArrowLeft className="w-6 h-6 text-[#1A1A1A]" />
           </button>
           <div className="flex-1 text-center">
-            <h1 className="text-[18px] font-bold text-[#1A1A1A]">
-              {list.name}
-            </h1>
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-[18px] font-bold text-[#1A1A1A]">
+                {list.name}
+              </h1>
+              <button
+                type="button"
+                onClick={() => setIsRenameDialogOpen(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-[#66736A] transition-colors hover:bg-[#F0F5F1] hover:text-[#2D6A4F]"
+                aria-label={`Rename ${list.name}`}
+              >
+                <PencilLine className="h-4 w-4" />
+              </button>
+            </div>
             <p className="text-[12px] text-[#999999]">
               {completedCount}/{totalItems} items checked · Modified{" "}
               {list.modifiedDate}
@@ -1074,6 +1098,12 @@ export default function ListDetail() {
       </div>
 
       <BottomNav />
+      <EditListTitleDialog
+        isOpen={isRenameDialogOpen}
+        initialTitle={list.name}
+        onClose={() => setIsRenameDialogOpen(false)}
+        onSave={handleRenameListTitle}
+      />
     </div>
   );
 }

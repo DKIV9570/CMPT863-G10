@@ -3,11 +3,13 @@ import { Sparkles, Send, Share2 } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import ListCard from "../components/ListCard";
 import NewListDialog from "../components/NewListDialog";
+import EditListTitleDialog from "../components/EditListTitleDialog";
 import {
   getLists,
   addList,
   deleteList,
   moveList,
+  renameList,
   ShoppingList,
 } from "../store/listsStore";
 import { useNavigate } from "react-router";
@@ -15,6 +17,9 @@ import { useNavigate } from "react-router";
 export default function Home() {
   const [lists, setLists] = useState(getLists());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [listBeingRenamed, setListBeingRenamed] = useState<ShoppingList | null>(
+    null
+  );
   const [aiPrompt, setAiPrompt] = useState("");
   const [draggedListId, setDraggedListId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
@@ -47,6 +52,16 @@ export default function Home() {
     if (dropTargetId === listId) {
       setDropTargetId(null);
     }
+  };
+
+  const handleRenameList = (name: string) => {
+    if (!listBeingRenamed) {
+      return;
+    }
+
+    renameList(listBeingRenamed.id, name);
+    setLists(getLists());
+    setListBeingRenamed(null);
   };
 
   const handleDragStart = (listId: string) => {
@@ -167,7 +182,7 @@ export default function Home() {
           <div>
             <h2 className="text-[17px] font-bold text-[#1A1A1A]">Your Lists</h2>
             <p className="text-[12px] text-[#999999] mt-1">
-              Drag cards to reorder them, or use the trash icon to remove a list.
+              Drag cards to reorder them, or use the edit and trash icons to manage a list.
             </p>
           </div>
           <button
@@ -187,6 +202,7 @@ export default function Home() {
                 isDragging={draggedListId === list.id}
                 isDropTarget={dropTargetId === list.id && draggedListId !== list.id}
                 onDelete={handleDeleteList}
+                onRename={setListBeingRenamed}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
@@ -206,6 +222,12 @@ export default function Home() {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onCreateList={handleCreateList}
+      />
+      <EditListTitleDialog
+        isOpen={Boolean(listBeingRenamed)}
+        initialTitle={listBeingRenamed?.name ?? ""}
+        onClose={() => setListBeingRenamed(null)}
+        onSave={handleRenameList}
       />
     </div>
   );
