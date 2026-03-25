@@ -3,6 +3,7 @@ import { Send, Sparkles, Trash2 } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import { useLocation, useNavigate } from "react-router";
 import { addList, ShoppingList } from "../store/listsStore";
+import { getAiRulesContext, type AiRulesContext } from "../utils/listAi";
 
 const OPENAI_API_KEY = (import.meta.env.VITE_OPENAI_API_KEY ?? "").trim();
 
@@ -171,7 +172,8 @@ function formatAmountLabel(quantity: number, unit: string) {
 function buildAiPrompt(
   activePrompt: string,
   requestedItemCount: number | null,
-  submittedContext: ParsedAIResponse | null
+  submittedContext: ParsedAIResponse | null,
+  rules: AiRulesContext
 ) {
   const isEditingExistingList = Boolean(submittedContext?.items.length);
   const currentListContextText = submittedContext
@@ -190,6 +192,17 @@ function buildAiPrompt(
   Please give specific items and quantities, such as '2 lbs of chicken breast' or '1 dozen eggs'.
   Label each item with its category (e.g., Produce, Dairy, Meat, Pantry) for easy organization.
   Please only suggest items that fall into these categories and label them as such.
+  Saved assistant rules:
+${JSON.stringify(rules, null, 2)}
+
+  Brand guidance:
+  - Prefer these brands when possible: ${
+    rules.preferredBrands.length ? rules.preferredBrands.join(", ") : "None saved"
+  }
+  - Avoid these brands: ${
+    rules.avoidedBrands.length ? rules.avoidedBrands.join(", ") : "None saved"
+  }
+  - Treat any custom brands in those lists as real brand rules, even if they are not common household names.
   ${
     isEditingExistingList
       ? `This is the user's current grocery list:
@@ -231,13 +244,16 @@ export default function LoadingPage() {
   const initialPrompt =
     typeof location.state?.prompt === "string" && location.state.prompt.trim()
       ? location.state.prompt.trim()
-      : "Build a weekly list for 2";
+      : "";
+  const hasInitialPrompt = Boolean(initialPrompt);
 
   const [activePrompt, setActivePrompt] = useState(initialPrompt);
   const [draftPrompt, setDraftPrompt] = useState("");
-  const [promptHistory, setPromptHistory] = useState<string[]>([initialPrompt]);
+  const [promptHistory, setPromptHistory] = useState<string[]>(
+    hasInitialPrompt ? [initialPrompt] : []
+  );
   const [progress, setProgress] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(hasInitialPrompt);
   const [rawAiText, setRawAiText] = useState("");
   const [reviewList, setReviewList] = useState<ReviewList | null>(null);
   const [listTitle, setListTitle] = useState("");
@@ -245,23 +261,33 @@ export default function LoadingPage() {
   const [submittedContext, setSubmittedContext] = useState<ParsedAIResponse | null>(null);
 
   const requestedItemCount = getRequestedItemCount(activePrompt);
-  const parsedResponse = parseAiResponse(rawAiText, requestedItemCount);
   const hasValidItems = Boolean(reviewList?.items.length);
   const isEditingExistingList = Boolean(submittedContext?.items.length);
-  const headerTitle = isLoading
-    ? isEditingExistingList
-      ? "Updating your list..."
-      : "Generating your list..."
-    : hasValidItems
-      ? "Review your list"
-      : "Something went wrong";
-  const headerSubtitle = isLoading
-    ? isEditingExistingList
-      ? "Applying your latest change to the current list"
-      : "Creating a grocery list based on what you asked for"
-    : hasValidItems
-      ? "Check the title and items before creating it"
-      : "We couldn't finish the AI update";
+  const isIdleState =
+    !hasInitialPrompt &&
+    !activePrompt &&
+    !isLoading &&
+    !hasValidItems &&
+    !rawAiText.trim() &&
+    promptHistory.length === 0;
+  const headerTitle = isIdleState
+    ? "Start with a prompt"
+    : isLoading
+      ? isEditingExistingList
+        ? "Updating your list..."
+        : "Generating your list..."
+      : hasValidItems
+        ? "Review your list"
+        : "Something went wrong";
+  const headerSubtitle = isIdleState
+    ? "Describe the grocery list you want to create."
+    : isLoading
+      ? isEditingExistingList
+        ? "Applying your latest change to the current list"
+        : "Creating a grocery list based on what you asked for"
+      : hasValidItems
+        ? "Check the title and items before creating it"
+        : "We couldn't finish the AI update";
   const finalListTitle =
     listTitle.trim() ||
     reviewList?.title ||
@@ -277,9 +303,9 @@ export default function LoadingPage() {
   useEffect(() => {
     setActivePrompt(initialPrompt);
     setDraftPrompt("");
-    setPromptHistory([initialPrompt]);
+    setPromptHistory(initialPrompt ? [initialPrompt] : []);
     setProgress(0);
-    setIsLoading(true);
+    setIsLoading(Boolean(initialPrompt));
     setRawAiText("");
     setReviewList(null);
     setListTitle("");
@@ -288,6 +314,12 @@ export default function LoadingPage() {
   }, [initialPrompt]);
 
   useEffect(() => {
+    if (!activePrompt.trim()) {
+      setIsLoading(false);
+      setProgress(0);
+      return;
+    }
+
     let isCancelled = false;
     let currentProgress = 0;
 
@@ -308,6 +340,8 @@ export default function LoadingPage() {
 
     (async () => {
       try {
+        const aiRules = getAiRulesContext();
+
         if (!OPENAI_API_KEY) {
           if (isCancelled) return;
 
@@ -330,7 +364,12 @@ export default function LoadingPage() {
             messages: [
               {
                 role: "user",
-                content: buildAiPrompt(activePrompt, requestedItemCount, submittedContext),
+                content: buildAiPrompt(
+                  activePrompt,
+                  requestedItemCount,
+                  submittedContext,
+                  aiRules
+                ),
               },
             ],
             max_tokens: 500,
@@ -456,7 +495,7 @@ export default function LoadingPage() {
   };
 
   return (
-    <div className="bg-white min-h-screen pb-[700px] max-w-[3000px] mx-auto">
+    <div className="bg-white min-h-screen pb-[700px] max-w-[608px] mx-auto">
       <div className="sticky top-0 bg-white z-10 border-b border-[#F5F5F5]">
         <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
           <span>9:41</span>
@@ -518,21 +557,23 @@ export default function LoadingPage() {
           </button>
         </div>
 
-        <div className="bg-[#F7FAF8] border border-[#DDE8DF] rounded-2xl px-4 py-3">
-          <input
-            type="text"
-            value={listTitle}
-            onChange={(event) => {
-              setHasEditedTitle(true);
-              setListTitle(event.target.value);
-              setReviewList((current) =>
-                current ? { ...current, title: event.target.value } : current
-              );
-            }}
-            placeholder="AI-Generated List"
-            className="w-full rounded-2xl border border-[#D4E1D7] bg-white px-4 py-3 text-[15px] font-semibold text-[#1A1A1A] outline-none focus:border-[#2D6A4F]"
-          />
-        </div>
+        {reviewList && (
+          <div className="bg-[#F7FAF8] border border-[#DDE8DF] rounded-2xl px-4 py-3">
+            <input
+              type="text"
+              value={listTitle}
+              onChange={(event) => {
+                setHasEditedTitle(true);
+                setListTitle(event.target.value);
+                setReviewList((current) =>
+                  current ? { ...current, title: event.target.value } : current
+                );
+              }}
+              placeholder="AI-Generated List"
+              className="w-full rounded-2xl border border-[#D4E1D7] bg-white px-4 py-3 text-[15px] font-semibold text-[#1A1A1A] outline-none focus:border-[#2D6A4F]"
+            />
+          </div>
+        )}
       </div>
 
       {reviewList?.items.length ? (
@@ -594,6 +635,25 @@ export default function LoadingPage() {
         <div className="px-6 py-4 bg-[#F0F5F1] rounded-xl mt-4">
           <p className="text-[18px] text-[#1A1A1A]">{rawAiText}</p>
         </div>
+      ) : isIdleState ? (
+        <div className="px-6 py-6">
+          <div className="rounded-[28px] border border-[#DCE7DE] bg-[linear-gradient(135deg,#F5FAF6_0%,#EDF6EF_100%)] p-5">
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-white/80 border border-[#DCE7DE] flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-[#2D6A4F]" />
+              </div>
+              <div>
+                <p className="text-[15px] font-bold text-[#1A1A1A]">
+                  Build a list when you are ready
+                </p>
+                <p className="mt-1 text-[12px] text-[#66736A]">
+                  This page only starts the AI when a prompt is submitted here or
+                  passed in from the normal create-list flow.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {isLoading && (
@@ -607,7 +667,7 @@ export default function LoadingPage() {
         </div>
       )}
 
-      <div className="fixed bottom-[111px] left-0 right-0 bg-white p-4 border-t border-[#F5F5F5] max-w-[3000px] mx-auto flex gap-3">
+      <div className="fixed bottom-[111px] left-0 right-0 bg-white p-4 border-t border-[#F5F5F5] max-w-[608px] mx-auto flex gap-3">
         <button
           className="flex-1 py-3 px-4 border-2 border-[#2D6A4F] rounded-2xl text-[#2D6A4F] font-bold hover:bg-[#F0F5F1] transition-colors"
           onClick={() => navigate(-1)}

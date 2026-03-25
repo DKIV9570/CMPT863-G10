@@ -59,6 +59,10 @@ const defaultSettings: RulesSettings = {
   orderRules: starterRules,
 };
 
+function normalizeBrandName(brand: string) {
+  return brand.replace(/\s+/g, " ").trim();
+}
+
 function loadSettings(): RulesSettings {
   if (typeof window === "undefined") {
     return defaultSettings;
@@ -102,6 +106,18 @@ export default function AIRules() {
     );
   }, [settings]);
 
+  const visibleBrands = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...brandOptions,
+          ...settings.preferredBrands,
+          ...settings.avoidedBrands,
+        ])
+      ),
+    [settings.avoidedBrands, settings.preferredBrands]
+  );
+
   const toggleDietaryPreference = (preference: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -131,10 +147,15 @@ export default function AIRules() {
   };
 
   const addCustomBrand = (bucket: "preferredBrands" | "avoidedBrands") => {
-    const brand = customBrand.trim();
+    const brand = normalizeBrandName(customBrand);
     if (!brand) return;
 
-    toggleBrand(bucket, brand);
+    const existingBrand =
+      visibleBrands.find(
+        (candidate) => candidate.toLowerCase() === brand.toLowerCase()
+      ) ?? brand;
+
+    toggleBrand(bucket, existingBrand);
     setCustomBrand("");
   };
 
@@ -293,7 +314,7 @@ export default function AIRules() {
                 Preferred Brands
               </p>
               <div className="flex flex-wrap gap-2">
-                {brandOptions.map((brand) => {
+                {visibleBrands.map((brand) => {
                   const isSelected = settings.preferredBrands.includes(brand);
                   return (
                     <button
@@ -318,7 +339,7 @@ export default function AIRules() {
                 Avoid Brands
               </p>
               <div className="flex flex-wrap gap-2">
-                {brandOptions.map((brand) => {
+                {visibleBrands.map((brand) => {
                   const isSelected = settings.avoidedBrands.includes(brand);
                   return (
                     <button
@@ -349,6 +370,10 @@ export default function AIRules() {
                 placeholder="e.g. Silk, Heinz, Oatly"
                 className="w-full rounded-xl border border-[#E2E9E3] bg-white px-4 py-3 text-[13px] text-[#1A1A1A] placeholder:text-[#999999] outline-none focus:ring-2 focus:ring-[#2D6A4F]"
               />
+              <p className="mt-2 text-[11px] text-[#66736A]">
+                Custom brands are saved here and immediately become part of the
+                assistant&apos;s brand rules.
+              </p>
               <div className="mt-3 flex gap-3">
                 <button
                   type="button"

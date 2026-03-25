@@ -210,6 +210,15 @@ ${JSON.stringify(items.map(normalizeItem), null, 2)}
 Persistent AI rules:
 ${JSON.stringify(rules, null, 2)}
 
+Brand guidance:
+- Prefer these brands when possible: ${
+   rules.preferredBrands.length ? rules.preferredBrands.join(", ") : "None saved"
+ }
+- Avoid these brands: ${
+   rules.avoidedBrands.length ? rules.avoidedBrands.join(", ") : "None saved"
+ }
+- Treat any custom brands in those lists as real brand rules, even if they are not common household names.
+
 User request:
 ${prompt}
 
