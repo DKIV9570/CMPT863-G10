@@ -36,22 +36,6 @@ export default function Receipt() {
         className="hidden"
       />
 
-      {/* Status Bar */}
-      <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
-        <span>9:41</span>
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
-            <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm"></div>
-            <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm"></div>
-            <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm opacity-40"></div>
-            <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm opacity-40"></div>
-          </div>
-          <div className="w-6 h-3 border-2 border-[#1A1A1A] rounded-sm relative">
-            <div className="absolute inset-0.5 bg-[#34C759] rounded-[1px]"></div>
-            <div className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-1 bg-[#1A1A1A] rounded-r-sm opacity-40"></div>
-          </div>
-        </div>
-      </div>
 
       {/* Header */}
       <div className="px-6 pt-4 pb-2 flex items-center gap-3">
@@ -122,7 +106,7 @@ export default function Receipt() {
 
         <div className="flex justify-center mt-3">
         <button className="bg-[#2D6A4F] text-white py-4 px-6 rounded-2xl font-semibold flex items-center justify-center gap-2"
-          onClick={() => navigate("*")}
+          onClick={() => navigate("/")}
         >
         Next
         </button>

@@ -495,23 +495,9 @@ export default function LoadingPage() {
   };
 
   return (
-    <div className="bg-white min-h-screen pb-[700px] max-w-[608px] mx-auto">
+    <div className="bg-white min-h-screen pb-[700px] max-w-[3000px] mx-auto">
       <div className="sticky top-0 bg-white z-10 border-b border-[#F5F5F5]">
-        <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
-          <span>9:41</span>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm"></div>
-              <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm"></div>
-              <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm opacity-40"></div>
-              <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm opacity-40"></div>
-            </div>
-            <div className="w-6 h-3 border-2 border-[#1A1A1A] rounded-sm relative">
-              <div className="absolute inset-0.5 bg-[#34C759] rounded-[1px]"></div>
-              <div className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-1 bg-[#1A1A1A] rounded-r-sm opacity-40"></div>
-            </div>
-          </div>
-        </div>
+        
 
         <div className="px-6 py-4 text-center">
           <h1 className="text-[18px] font-bold text-[#1A1A1A]">
@@ -667,7 +653,7 @@ export default function LoadingPage() {
         </div>
       )}
 
-      <div className="fixed bottom-[111px] left-0 right-0 bg-white p-4 border-t border-[#F5F5F5] max-w-[608px] mx-auto flex gap-3">
+      <div className="fixed bottom-[111px] left-0 right-0 bg-white p-4 border-t border-[#F5F5F5] max-auto mx-auto flex gap-3">
         <button
           className="flex-1 py-3 px-4 border-2 border-[#2D6A4F] rounded-2xl text-[#2D6A4F] font-bold hover:bg-[#F0F5F1] transition-colors"
           onClick={() => navigate(-1)}

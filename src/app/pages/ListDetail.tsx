@@ -777,21 +777,6 @@ export default function ListDetail() {
   return (
     <div className="bg-white min-h-screen pb-[320px] max-w-[3000px] mx-auto">
       <div className="sticky top-0 bg-white z-10">
-        <div className="h-11 px-6 flex items-center justify-between text-sm font-bold">
-          <span>9:41</span>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm"></div>
-              <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm"></div>
-              <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm opacity-40"></div>
-              <div className="w-1 h-3 bg-[#1A1A1A] rounded-sm opacity-40"></div>
-            </div>
-            <div className="w-6 h-3 border-2 border-[#1A1A1A] rounded-sm relative">
-              <div className="absolute inset-0.5 bg-[#34C759] rounded-[1px]"></div>
-              <div className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-1 bg-[#1A1A1A] rounded-r-sm opacity-40"></div>
-            </div>
-          </div>
-        </div>
         <div className="px-6 py-4 flex items-center justify-between border-b border-[#F5F5F5]">
           <button
             onClick={() => navigate("/")}
@@ -820,7 +805,7 @@ export default function ListDetail() {
           </div>
           <button
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
-            onClick={() => navigate("*")}
+            onClick={() => navigate("/share-list")}
           >
             <Share2 className="w-6 h-6 text-[#1A1A1A]" />
           </button>

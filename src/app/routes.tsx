@@ -9,6 +9,7 @@ import PriceComparison from "./pages/PriceComparison";
 import Checkout from "./pages/Checkout";
 import AIRules from "./pages/AIRules";
 import AILoadingPage from "./pages/AILoadingPage";
+import ShareListPage from "./pages/ShareListPage";
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +55,10 @@ export const router = createBrowserRouter([
   {
     path: "/ai-loading",
     Component: AILoadingPage,
+  },
+  {
+    path: "/share-list",
+    Component: ShareListPage,
   }
 
 ]);
