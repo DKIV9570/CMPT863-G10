@@ -67,6 +67,12 @@ export type PricingRouteState = {
   feedback?: ActionFeedback;
 };
 
+export type UserPreferences = {
+  checkoutStrategy: "cheapest" | "single-store" | "preferred-first";
+  preferredStoreKeys: StoreKey[];
+  categoryBrandPreferences: Record<string, string>;
+};
+
 type CatalogOffer = {
   brand: string;
   packageLabel: string;
@@ -454,9 +460,57 @@ function createCheckoutItem(
   };
 }
 
+function getPreferredSingleStoreKey(
+  totals: Record<StoreKey, number>,
+  preferredStoreKeys: StoreKey[]
+): StoreKey {
+  if (preferredStoreKeys.length === 0) {
+    return getCheapestStoreKey(totals);
+  }
+  return preferredStoreKeys.reduce((best, key) =>
+    totals[key] < totals[best] ? key : best
+  , preferredStoreKeys[0]);
+}
+
+function getAssistantStoreKeyForItem(
+  item: ComparedItem,
+  strategy: "cheapest" | "single-store" | "preferred-first",
+  preferredStoreKeys: StoreKey[],
+  singleStoreKey: StoreKey,
+  categoryBrandPreferences: Record<string, string>
+): StoreKey {
+  if (strategy === "single-store") {
+    return singleStoreKey;
+  }
+
+  // Candidate stores: preferred stores if set, otherwise all stores
+  const allStoreKeys = storeDefinitions.map((s) => s.key);
+  const candidates = preferredStoreKeys.length > 0 ? preferredStoreKeys : allStoreKeys;
+
+  // Check if there's a brand preference for this item's category
+  const preferredBrand = categoryBrandPreferences[item.category]?.trim().toLowerCase();
+  if (preferredBrand) {
+    const brandMatches = candidates.filter(
+      (key) => item.offers[key].brand.toLowerCase().includes(preferredBrand)
+    );
+    if (brandMatches.length > 0) {
+      // Among brand-matching stores, pick cheapest
+      return brandMatches.reduce((best, key) =>
+        item.prices[key] < item.prices[best] ? key : best
+      , brandMatches[0]);
+    }
+  }
+
+  // No brand match — pick cheapest among candidates
+  return candidates.reduce((best, key) =>
+    item.prices[key] < item.prices[best] ? key : best
+  , candidates[0]);
+}
+
 export function buildComparisonData(
   listId: string,
-  sourceItems?: ListItem[]
+  sourceItems?: ListItem[],
+  prefs?: UserPreferences
 ): ComparisonData | null {
   const list = getListById(listId) ?? getListById(fallbackListId);
   if (!list) {
@@ -516,8 +570,15 @@ export function buildComparisonData(
   );
 
   const cheapestTotalStoreKey = getCheapestStoreKey(totals);
-  const cheapestTotalStore =
-    storeDefinitions.find((store) => store.key === cheapestTotalStoreKey) ??
+
+  const strategy = prefs?.checkoutStrategy ?? "cheapest";
+  const preferredStoreKeys = prefs?.preferredStoreKeys ?? [];
+  const categoryBrandPreferences = prefs?.categoryBrandPreferences ?? {};
+
+  // The single store used for both "single-store" strategy and the singleStorePlan
+  const singleStoreKey = getPreferredSingleStoreKey(totals, preferredStoreKeys);
+  const singleStore =
+    storeDefinitions.find((store) => store.key === singleStoreKey) ??
     storeDefinitions[0];
 
   const assistantStoresMap: Record<StoreKey, CheckoutStore> = {
@@ -527,8 +588,9 @@ export function buildComparisonData(
   };
 
   comparedItems.forEach((item) => {
-    const assignedStore = assistantStoresMap[item.bestStoreKey];
-    const lineItem = createCheckoutItem(item, item.bestStoreKey);
+    const assignedKey = getAssistantStoreKeyForItem(item, strategy, preferredStoreKeys, singleStoreKey, categoryBrandPreferences);
+    const assignedStore = assistantStoresMap[assignedKey];
+    const lineItem = createCheckoutItem(item, assignedKey);
     assignedStore.items.push(lineItem);
     assignedStore.total = roundCurrency(assignedStore.total + lineItem.price);
   });
@@ -541,16 +603,37 @@ export function buildComparisonData(
     assistantStores.reduce((sum, store) => sum + store.total, 0)
   );
 
-  const singleStorePlanStore = createEmptyCheckoutStore(cheapestTotalStore);
+  const singleStorePlanStore = createEmptyCheckoutStore(singleStore);
   comparedItems.forEach((item) => {
-    const lineItem = createCheckoutItem(item, cheapestTotalStore.key);
+    const lineItem = createCheckoutItem(item, singleStore.key);
     singleStorePlanStore.items.push(lineItem);
   });
-  singleStorePlanStore.total = totals[cheapestTotalStore.key];
+  singleStorePlanStore.total = totals[singleStore.key];
 
   const savings = roundCurrency(
-    Math.max(0, totals[cheapestTotalStore.key] - assistantTotal)
+    Math.max(0, totals[singleStore.key] - assistantTotal)
   );
+
+  const assistantPlanTitle =
+    strategy === "preferred-first" && preferredStoreKeys.length > 0
+      ? "AI Optimized (Preferred Stores)"
+      : strategy === "single-store"
+      ? "AI Optimized (Single Store)"
+      : "AI Optimized Selection";
+
+  const assistantPlanSummary =
+    strategy === "single-store"
+      ? `All items assigned to ${singleStore.name}${preferredStoreKeys.length > 0 ? ", your preferred store" : ", the lowest-cost option"}.`
+      : strategy === "preferred-first" && preferredStoreKeys.length > 0
+      ? `Items split across your preferred stores (${preferredStoreKeys.map((k) => storeDefinitions.find((s) => s.key === k)?.name ?? k).join(", ")}) to minimize cost.`
+      : savings > 0
+      ? `This split basket saves ${formatCurrency(savings)} compared with buying everything at ${singleStore.name}.`
+      : `${singleStore.name} already has the best total for this basket.`;
+
+  const singleStoreSummary =
+    preferredStoreKeys.length > 0
+      ? `Everything grouped under ${singleStore.name}, your preferred store with the lowest total.`
+      : `Everything is grouped under ${singleStore.name}, which has the lowest full-cart total right now.`;
 
   return {
     listId: list.id,
@@ -561,13 +644,8 @@ export function buildComparisonData(
     cheapestTotalStoreKey,
     assistantPlan: {
       key: "assistant",
-      title: "AI Optimized Selection",
-      summary:
-        savings > 0
-          ? `This split basket saves ${formatCurrency(
-              savings
-            )} compared with buying everything at ${cheapestTotalStore.name}.`
-          : `${cheapestTotalStore.name} already has the best total for this basket.`,
+      title: assistantPlanTitle,
+      summary: assistantPlanSummary,
       stores: assistantStores,
       total: assistantTotal,
       savings,
@@ -575,7 +653,7 @@ export function buildComparisonData(
     singleStorePlan: {
       key: "single-store",
       title: "Single-Store Checkout",
-      summary: `Everything is grouped under ${cheapestTotalStore.name}, which has the lowest full-cart total right now.`,
+      summary: singleStoreSummary,
       stores: [singleStorePlanStore],
       total: singleStorePlanStore.total,
       savings: 0,
@@ -635,10 +713,11 @@ export function buildManualSelectionPlan(
 }
 
 export function resolveComparisonData(
-  state?: PricingRouteState
+  state?: PricingRouteState,
+  prefs?: UserPreferences
 ): ComparisonData | null {
   const source = getListSource(state);
-  return buildComparisonData(source.listId, source.items);
+  return buildComparisonData(source.listId, source.items, prefs);
 }
 
 export function formatCurrency(value: number): string {

@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
+  DollarSign,
+  Layers,
   ListChecks,
   Plus,
   RotateCcw,
   Sparkles,
+  Store,
   Tags,
   UtensilsCrossed,
   X,
@@ -12,11 +15,17 @@ import {
 import { useNavigate } from "react-router";
 import BottomNav from "../components/BottomNav";
 
+type CheckoutStrategy = "cheapest" | "single-store" | "preferred-first";
+
 type RulesSettings = {
   dietaryPreferences: string[];
   preferredBrands: string[];
   avoidedBrands: string[];
   orderRules: string[];
+  budgetLimit: number | null;
+  preferredStores: string[];
+  checkoutStrategy: CheckoutStrategy;
+  categoryBrandPreferences: Record<string, string>;
 };
 
 const STORAGE_KEY = "shopbuddy-ai-rules";
@@ -57,6 +66,10 @@ const defaultSettings: RulesSettings = {
   preferredBrands: ["President's Choice"],
   avoidedBrands: [],
   orderRules: starterRules,
+  budgetLimit: null,
+  preferredStores: [],
+  checkoutStrategy: "cheapest",
+  categoryBrandPreferences: {},
 };
 
 function normalizeBrandName(brand: string) {
@@ -75,12 +88,31 @@ function loadSettings(): RulesSettings {
     }
 
     const parsed = JSON.parse(raw) as Partial<RulesSettings>;
+    const checkoutStrategy =
+      parsed.checkoutStrategy === "cheapest" ||
+      parsed.checkoutStrategy === "single-store" ||
+      parsed.checkoutStrategy === "preferred-first"
+        ? parsed.checkoutStrategy
+        : defaultSettings.checkoutStrategy;
+
     return {
       dietaryPreferences:
         parsed.dietaryPreferences ?? defaultSettings.dietaryPreferences,
       preferredBrands: parsed.preferredBrands ?? defaultSettings.preferredBrands,
       avoidedBrands: parsed.avoidedBrands ?? defaultSettings.avoidedBrands,
       orderRules: parsed.orderRules ?? defaultSettings.orderRules,
+      budgetLimit:
+        typeof parsed.budgetLimit === "number" ? parsed.budgetLimit : null,
+      preferredStores: Array.isArray(parsed.preferredStores)
+        ? (parsed.preferredStores as string[]).filter((s) => typeof s === "string")
+        : [],
+      checkoutStrategy,
+      categoryBrandPreferences:
+        parsed.categoryBrandPreferences &&
+        typeof parsed.categoryBrandPreferences === "object" &&
+        !Array.isArray(parsed.categoryBrandPreferences)
+          ? (parsed.categoryBrandPreferences as Record<string, string>)
+          : {},
     };
   } catch {
     return defaultSettings;
@@ -102,9 +134,21 @@ export default function AIRules() {
       settings.dietaryPreferences.length +
       settings.preferredBrands.length +
       settings.avoidedBrands.length +
-      settings.orderRules.length
+      settings.orderRules.length +
+      (settings.budgetLimit !== null ? 1 : 0) +
+      settings.preferredStores.length +
+      Object.values(settings.categoryBrandPreferences).filter(Boolean).length
     );
   }, [settings]);
+
+  const toggleStore = (store: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      preferredStores: prev.preferredStores.includes(store)
+        ? prev.preferredStores.filter((s) => s !== store)
+        : [...prev.preferredStores, store],
+    }));
+  };
 
   const visibleBrands = useMemo(
     () =>
@@ -394,6 +438,178 @@ export default function AIRules() {
           </div>
         </section>
 
+        {/* Budget Limit */}
+        <section className="rounded-[28px] border border-[#EEEEEE] bg-white p-5">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-11 h-11 rounded-2xl bg-[#F0F5F1] flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-[#2D6A4F]" />
+            </div>
+            <div>
+              <h2 className="text-[17px] font-bold text-[#1A1A1A]">
+                Budget Limit
+              </h2>
+              <p className="text-[12px] text-[#888888] mt-1">
+                Set a per-trip spending cap. The AI will try to keep suggestions within budget.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 flex items-center gap-2 rounded-xl border border-[#E2E9E3] bg-[#F7FAF7] px-4 py-3">
+              <span className="text-[15px] font-bold text-[#2D6A4F]">$</span>
+              <input
+                type="number"
+                min={0}
+                value={settings.budgetLimit ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? null : Math.max(0, Number(e.target.value));
+                  setSettings((prev) => ({ ...prev, budgetLimit: val }));
+                }}
+                placeholder="No limit"
+                className="flex-1 bg-transparent text-[15px] text-[#1A1A1A] placeholder:text-[#999999] outline-none"
+              />
+            </div>
+            {settings.budgetLimit !== null && (
+              <button
+                type="button"
+                onClick={() => setSettings((prev) => ({ ...prev, budgetLimit: null }))}
+                className="w-10 h-10 rounded-xl border border-[#E2E9E3] flex items-center justify-center text-[#9AA69D] hover:text-[#66736A]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {settings.budgetLimit !== null && (
+            <p className="mt-2 text-[12px] text-[#66736A]">
+              AI will keep suggestions under ${settings.budgetLimit} per trip.
+            </p>
+          )}
+        </section>
+
+        {/* Store Preferences */}
+        <section className="rounded-[28px] border border-[#EEEEEE] bg-white p-5">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-11 h-11 rounded-2xl bg-[#F0F5F1] flex items-center justify-center">
+              <Store className="w-5 h-5 text-[#2D6A4F]" />
+            </div>
+            <div>
+              <h2 className="text-[17px] font-bold text-[#1A1A1A]">
+                Store Preferences
+              </h2>
+              <p className="text-[12px] text-[#888888] mt-1">
+                Choose your preferred stores and how the AI should plan your checkout.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#6B7E71] mb-2">
+                Preferred Stores
+              </p>
+              <div className="flex gap-2">
+                {["Walmart", "Superstore", "Safeway"].map((store) => {
+                  const isSelected = settings.preferredStores.includes(store);
+                  return (
+                    <button
+                      key={store}
+                      type="button"
+                      onClick={() => toggleStore(store)}
+                      className={`flex-1 rounded-xl py-3 text-[13px] font-semibold transition-colors ${
+                        isSelected
+                          ? "bg-[#2D6A4F] text-white"
+                          : "bg-[#F4F7F4] text-[#496050] border border-[#E2E9E3]"
+                      }`}
+                    >
+                      {store}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#6B7E71] mb-2">
+                Checkout Strategy
+              </p>
+              <div className="space-y-2">
+                {(
+                  [
+                    { value: "cheapest", label: "Cheapest overall", desc: "AI splits your cart across stores to minimize cost" },
+                    { value: "single-store", label: "Single store only", desc: "Always buy everything from one store" },
+                    { value: "preferred-first", label: "Preferred stores first", desc: "Prioritize your selected stores above" },
+                  ] as { value: CheckoutStrategy; label: string; desc: string }[]
+                ).map(({ value, label, desc }) => {
+                  const isSelected = settings.checkoutStrategy === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSettings((prev) => ({ ...prev, checkoutStrategy: value }))}
+                      className={`w-full flex items-start gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
+                        isSelected
+                          ? "border-[#2D6A4F] bg-[#F0F7F2]"
+                          : "border-[#E6ECE7] bg-[#FAFCFA]"
+                      }`}
+                    >
+                      <span className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                        isSelected ? "border-[#2D6A4F]" : "border-[#C5D0C7]"
+                      }`}>
+                        {isSelected && <span className="w-2 h-2 rounded-full bg-[#2D6A4F]" />}
+                      </span>
+                      <div>
+                        <p className={`text-[13px] font-semibold ${isSelected ? "text-[#1A1A1A]" : "text-[#3D4E41]"}`}>
+                          {label}
+                        </p>
+                        <p className="text-[11px] text-[#888888] mt-0.5">{desc}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Category Brand Preferences */}
+        <section className="rounded-[28px] border border-[#EEEEEE] bg-white p-5">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-11 h-11 rounded-2xl bg-[#F0F5F1] flex items-center justify-center">
+              <Layers className="w-5 h-5 text-[#2D6A4F]" />
+            </div>
+            <div>
+              <h2 className="text-[17px] font-bold text-[#1A1A1A]">
+                Category Brand Preferences
+              </h2>
+              <p className="text-[12px] text-[#888888] mt-1">
+                Set a preferred brand per category. Leave blank for no preference.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {["Dairy", "Meat", "Produce", "Pantry", "Grains"].map((category) => (
+              <div key={category} className="flex items-center gap-3">
+                <span className="w-16 text-[13px] font-semibold text-[#3D4E41] shrink-0">
+                  {category}
+                </span>
+                <input
+                  type="text"
+                  value={settings.categoryBrandPreferences[category] ?? ""}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      categoryBrandPreferences: {
+                        ...prev.categoryBrandPreferences,
+                        [category]: e.target.value,
+                      },
+                    }))
+                  }
+                  placeholder="Any brand"
+                  className="flex-1 rounded-xl border border-[#E2E9E3] bg-[#F7FAF7] px-4 py-2.5 text-[13px] text-[#1A1A1A] placeholder:text-[#BBBBBB] outline-none focus:ring-2 focus:ring-[#2D6A4F]"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Order Rules */}
         <section className="rounded-[28px] border border-[#EEEEEE] bg-white p-5">
           <div className="flex items-start gap-3 mb-4">
             <div className="w-11 h-11 rounded-2xl bg-[#F0F5F1] flex items-center justify-center">

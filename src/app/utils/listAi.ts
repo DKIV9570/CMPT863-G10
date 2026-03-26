@@ -8,6 +8,10 @@ export type AiRulesContext = {
   preferredBrands: string[];
   avoidedBrands: string[];
   orderRules: string[];
+  budgetLimit: number | null;
+  preferredStores: string[];
+  checkoutStrategy: "cheapest" | "single-store" | "preferred-first";
+  categoryBrandPreferences: Record<string, string>;
 };
 
 export type AiSuggestedItem = {
@@ -38,6 +42,10 @@ const EMPTY_RULES: AiRulesContext = {
   preferredBrands: [],
   avoidedBrands: [],
   orderRules: [],
+  budgetLimit: null,
+  preferredStores: [],
+  checkoutStrategy: "cheapest",
+  categoryBrandPreferences: {},
 };
 
 function normalizeItem(item: ListItem) {
@@ -169,6 +177,13 @@ export function getAiRulesContext(): AiRulesContext {
     }
 
     const parsed = JSON.parse(rawRules) as Partial<AiRulesContext>;
+    const checkoutStrategy =
+      parsed.checkoutStrategy === "cheapest" ||
+      parsed.checkoutStrategy === "single-store" ||
+      parsed.checkoutStrategy === "preferred-first"
+        ? parsed.checkoutStrategy
+        : "cheapest";
+
     return {
       dietaryPreferences: Array.isArray(parsed.dietaryPreferences)
         ? parsed.dietaryPreferences.filter(
@@ -190,6 +205,20 @@ export function getAiRulesContext(): AiRulesContext {
             (rule): rule is string => typeof rule === "string"
           )
         : [],
+      budgetLimit:
+        typeof parsed.budgetLimit === "number" ? parsed.budgetLimit : null,
+      preferredStores: Array.isArray(parsed.preferredStores)
+        ? parsed.preferredStores.filter(
+            (s): s is string => typeof s === "string"
+          )
+        : [],
+      checkoutStrategy,
+      categoryBrandPreferences:
+        parsed.categoryBrandPreferences &&
+        typeof parsed.categoryBrandPreferences === "object" &&
+        !Array.isArray(parsed.categoryBrandPreferences)
+          ? parsed.categoryBrandPreferences
+          : {},
     };
   } catch {
     return EMPTY_RULES;
@@ -218,6 +247,18 @@ Brand guidance:
    rules.avoidedBrands.length ? rules.avoidedBrands.join(", ") : "None saved"
  }
 - Treat any custom brands in those lists as real brand rules, even if they are not common household names.
+- Category-specific brand preferences: ${
+   Object.entries(rules.categoryBrandPreferences).filter(([, v]) => v.trim()).map(([cat, brand]) => `${cat}: prefer ${brand}`).join("; ") || "None set"
+ }
+
+Budget & store guidance:
+- Budget limit: ${rules.budgetLimit !== null ? `Keep total under $${rules.budgetLimit} per trip` : "No limit set"}
+- Preferred stores: ${rules.preferredStores.length ? rules.preferredStores.join(", ") : "No preference"}
+- Checkout strategy: ${
+   rules.checkoutStrategy === "cheapest" ? "Cheapest overall — split cart across stores to minimize cost" :
+   rules.checkoutStrategy === "single-store" ? "Single store only — buy everything from one store" :
+   "Preferred stores first — prioritize the user's preferred stores"
+ }
 
 User request:
 ${prompt}

@@ -8,13 +8,27 @@ import {
   formatCurrency,
   PricingRouteState,
   resolveComparisonData,
+  StoreKey,
 } from "../utils/pricing";
+import { getAiRulesContext } from "../utils/listAi";
 
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const routeState = location.state as PricingRouteState | undefined;
-  const comparisonData = resolveComparisonData(routeState);
+
+  const rules = getAiRulesContext();
+  const userPrefs = {
+    checkoutStrategy: rules.checkoutStrategy,
+    preferredStoreKeys: rules.preferredStores
+      .map((s) => s.toLowerCase() as StoreKey)
+      .filter((k): k is StoreKey =>
+        k === "walmart" || k === "superstore" || k === "safeway"
+      ),
+    categoryBrandPreferences: rules.categoryBrandPreferences,
+  };
+
+  const comparisonData = resolveComparisonData(routeState, userPrefs);
   const { activeFeedback, dismissFeedback } = useTransientFeedback(
     routeState?.feedback
   );

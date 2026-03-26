@@ -10,13 +10,29 @@ import {
   PricingRouteState,
   resolveComparisonData,
   StoreKey,
+  UserPreferences,
 } from "../utils/pricing";
+import { getAiRulesContext } from "../utils/listAi";
 
 export default function PriceComparison() {
   const navigate = useNavigate();
   const location = useLocation();
   const routeState = location.state as PricingRouteState | undefined;
-  const comparisonData = resolveComparisonData(routeState);
+
+  const userPrefs = useMemo<UserPreferences>(() => {
+    const rules = getAiRulesContext();
+    return {
+      checkoutStrategy: rules.checkoutStrategy,
+      preferredStoreKeys: rules.preferredStores
+        .map((s) => s.toLowerCase() as StoreKey)
+        .filter((k): k is StoreKey =>
+          k === "walmart" || k === "superstore" || k === "safeway"
+        ),
+      categoryBrandPreferences: rules.categoryBrandPreferences,
+    };
+  }, []);
+
+  const comparisonData = resolveComparisonData(routeState, userPrefs);
   const { activeFeedback, dismissFeedback } = useTransientFeedback(
     routeState?.feedback
   );
